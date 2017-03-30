@@ -1,0 +1,778 @@
+>>> Jan 5th, 2017
+
+parallel prokka --outdir ~/Desktop/prokka_test/{/.} --prefix {/.} --locustag {/.} --force --cpus 1 {} ::: ~/Desktop/test_genomes/*.fasta
+
+
+roary -p 8 -e -n -f roary_test ./prokka_sample/*/*.gff 
+
+
+roary -p 8 -e -n -f ./roary/roary_test74 ./prokka/subset74/*/*.gff
+
+roary -p 8 -e -n -f ./roary/roary_test23 ./prokka/subset23/*/*.gff
+
+
+roary -p 8 -e -n -f ./roary/roary_full_test ./prokka/full_test/*/*.gff
+
+
+
+>>> Jan 6th, 2017
+
+blastn -query '/home/nadege/Desktop/roary/roary_test23/pan_genome_reference.fa' -subject '/home/nadege/Desktop/roary/roary_test74/pan_genome_reference.fa' -outfmt 7 -out ~/Desktop/blast_output_DB74_Q23.csv 
+
+
+prokka --outdir ~/Desktop/prokka/on_roary_output23/ --prefix subset23 --locustag subset23 --force --cpus 4 ~/Desktop/roary/roary_test23/pan_genome_reference.fa
+
+prokka --outdir ~/Desktop/prokka/on_roary_output74/ --prefix subset74 --locustag subset74 --force --cpus 4 ~/Desktop/roary/roary_test74/pan_genome_reference.fa
+
+
+roary -p 8 -e -n -f ./roary/roary23_and_roary74 ./prokka/roary23_and_roary74/*/*.gff
+
+roary -p 8 -e -n -f ./roary/roary74_and_subset23 ./prokka/roary74_and_subset23/*/*.gff
+
+
+>>> Jan 9th, 2017
+
+roary -p 8 -e -n -z -f roary/intermediate_files10 prokka/subset10/*/*.gff 
+
+roary -p 8 -y -z -f roary/inference_info_and_inter_files10 prokka/subset10/*/*.gff 
+
+
+
+>>> Jan 10th, 2017
+
+roary -p 8 -f roary/trace_test10 prokka/subset10/*/*.gff 
+
+parallel prokka --outdir ~/Desktop/prokka/complete_assembly_genomes/{/.} --prefix {/.} --locustag {/.} --force --cpus 1 {} ::: ~/Desktop/campy_full_genomes/*.fa
+
+
+#missing letter couldn't guess alphabet error, 
+roary -p 8 -e -n -z -f roary/full_genomes prokka/complete_assembly_genomes/*/*.gff 
+
+
+parallel prokka --outdir ~/Desktop/prokka/5_full_genomes/{/.} --prefix {/.} --locustag {/.} --force --cpus 1 {} ::: ~/Desktop/genomes/5_full_genomes/*.fasta
+
+roary -v -p 8 -e -n -z -f ~/Desktop/roary/5_full_genomes ~/Desktop/prokka/5_full_genomes/*/*.gff
+
+
+parallel python3 ~/Desktop/python_scripts/parse_plasmids.py {} ::: ~/Desktop/genomes/campy_full_genomes/*.fa
+
+
+
+>>> Jan 11th, 2017
+
+parallel prokka --outdir ~/Desktop/prokka/complete_assembly_genomes/no_plasmids/{/.} --prefix {/.} --locustag {/.} --force --cpus 1 {} ::: ~/Desktop/genomes/campy_full_genomes/no_plasmids/*.fasta
+
+roary -v -p 8 -e -n -z -f ~/Desktop/roary/full_genomes/no_plasmids ~/Desktop/prokka/complete_assembly_genomes/no_plasmids/*/*.gff #no result produced...?
+
+
+
+>>> Jan 12th, 2017
+
+kraken --db ~/Desktop/minikraken_20141208 --threads 8 --fasta-input --output ~/Desktop/kraken/classification/full_genomes ~/Desktop/genomes/campy_full_genomes/plasmids/*.fa 
+
+kraken --db ~/Desktop/minikraken_20141208 --threads 8 --fasta-input ~/Desktop/genomes/campy_full_genomes/plasmids/*.fa > ~/Desktop/kraken/classification/full_genomes/results.txt
+
+kraken-report --db ~/Desktop/minikraken_20141208 ~/Desktop/kraken/classification/full_genomes/results.txt > ~/Desktop/kraken/reports/full_genomes/report.txt
+
+kraken-translate --db ~/Desktop/minikraken_20141208 ~/Desktop/kraken/classification/full_genomes/results.txt > ~/Desktop/kraken/translation/full_genomes/translation.txt 
+
+
+
+>>> Jan 13th, 2017
+
+parallel prokka --outdir ~/Desktop/prokka/complete_assembly_genomes/no_duplicates_plasmids/{/.} --prefix {/.} --locustag {/.} --force --cpus 1 {} ::: ~/Desktop/genomes/campy_full_genomes/no_duplicates_plasmids/*.fasta
+
+parallel prokka --outdir ~/Desktop/prokka/complete_assembly_genomes/no_duplicates_no_plasmids/{/.} --prefix {/.} --locustag {/.} --force --cpus 1 {} ::: ~/Desktop/genomes/campy_full_genomes/no_duplicates_no_plasmids/*.fasta
+
+roary -p 8 -e -n -z -f ~/Desktop/roary/full_genomes/no_duplicates_plasmids ~/Desktop/prokka/complete_assembly_genomes/no_duplicates_plasmids/*/*.gff
+
+roary -p 8 -e -n -z -f ~/Desktop/roary/full_genomes/no_duplicates_no_plasmids ~/Desktop/prokka/complete_assembly_genomes/no_duplicates_no_plasmids/*/*.gff
+
+
+
+>>> Jan 17th, 2017
+
+prokka --outdir ~/Desktop/meta_genome/ --prefix 'meta_genome' --locustag 'meta_genome' --force --cpus 7 '/home/nadege/Desktop/roary/full_genomes/no_duplicates_plasmids/pan_genome_reference.fa'
+
+
+
+>>> Jan 18th, 2017
+
+#Got all the GenBank files to compare, extract the relevant info (name, ID, loci, product, etc.)
+#the *.gbk ones only did the last file for some reason...
+python3 extract_gbk_IDs_and_annotation.py ~/Desktop/meta_genome/prokka_6_genomes/*.gbk
+python3 extract_gbk_IDs_and_annotation.py ~/Desktop/meta_genome/prokka_6_genomes/30628_no_duplicates.gbk
+python3 extract_gbk_IDs_and_annotation.py ~/Desktop/meta_genome/prokka_6_genomes/32968_no_duplicates.gbk 
+python3 extract_gbk_IDs_and_annotation.py ~/Desktop/meta_genome/prokka_6_genomes/36628_no_duplicates.gbk 
+python3 extract_gbk_IDs_and_annotation.py ~/Desktop/meta_genome/prokka_6_genomes/38588_no_duplicates.gbk 
+python3 extract_gbk_IDs_and_annotation.py ~/Desktop/meta_genome/prokka_6_genomes/39008_no_duplicates.gbk 
+python3 extract_gbk_IDs_and_annotation.py ~/Desktop/meta_genome/rast_6_genomes/*.gbk
+python3 extract_gbk_IDs_and_annotation.py ~/Desktop/meta_genome/rast_6_genomes/30628_NCTC11168.gbk 
+python3 extract_gbk_IDs_and_annotation.py ~/Desktop/meta_genome/rast_6_genomes/32968_RM1221.gbk 
+python3 extract_gbk_IDs_and_annotation.py ~/Desktop/meta_genome/rast_6_genomes/36628_81-176.gbk 
+python3 extract_gbk_IDs_and_annotation.py ~/Desktop/meta_genome/rast_6_genomes/38588_doylei_269.97.gbk 
+python3 extract_gbk_IDs_and_annotation.py ~/Desktop/meta_genome/rast_6_genomes/39008_81116.gbk 
+python3 extract_gbk_IDs_and_annotation.py ~/Desktop/meta_genome/ncbi_genbank_6_genomes/30628_NCTC11168.gb 
+python3 extract_gbk_IDs_and_annotation.py ~/Desktop/meta_genome/ncbi_genbank_6_genomes/32968_RM1221.gb 
+python3 extract_gbk_IDs_and_annotation.py ~/Desktop/meta_genome/ncbi_genbank_6_genomes/36628_81-176.gb 
+python3 extract_gbk_IDs_and_annotation.py ~/Desktop/meta_genome/ncbi_genbank_6_genomes/36628_81-176_pTet_partial.gb 
+python3 extract_gbk_IDs_and_annotation.py ~/Desktop/meta_genome/ncbi_genbank_6_genomes/36628_81-176.gb 
+python3 extract_gbk_IDs_and_annotation.py ~/Desktop/meta_genome/ncbi_genbank_6_genomes/36628_81-176_pVir_complete.gb 
+python3 extract_gbk_IDs_and_annotation.py ~/Desktop/meta_genome/ncbi_genbank_6_genomes/38588_doylei_269.97.gb 
+python3 extract_gbk_IDs_and_annotation.py ~/Desktop/meta_genome/ncbi_genbank_6_genomes/39008_81116.gb 
+python3 extract_gbk_IDs_and_annotation.py ~/Desktop/meta_genome/ncbi_genbank_6_genomes/275748_ICDCCJ07001.gb 
+python3 extract_gbk_IDs_and_annotation.py ~/Desktop/meta_genome/ncbi_genbank_6_genomes/275748_ICDCCJ07001_pTet_complete.gb 
+
+#extract and sort the data into a bunch of lists (3 way)
+python3 compare_id_locus_sets.py '/home/nadege/Desktop/meta_genome/prokka_genbank_6_genomes/prokka_genbank_gene_list.csv' '/home/nadege/Desktop/meta_genome/rast_genbank_6_genomes/rast_genbank_gene_list.csv' '/home/nadege/Desktop/meta_genome/ncbi_genbank_6_genomes/ncbi_genbank_gene_list.csv' 
+
+
+
+>>> Jan 20th, 2017
+
+python3 ~/Desktop/scripts/allign_gene_loci.py -_strand.csv      #crisp
+python3 ~/Desktop/scripts/allign_gene_loci.py -_strand.csv 15   #fuzzy with range +/- 15
+python3 ~/Desktop/scripts/allign_gene_loci.py +_strand.csv 
+python3 ~/Desktop/scripts/allign_gene_loci.py +_strand.csv 15 
+
+#I ran a few of these ^
+
+
+
+>>> Jan 25th, 2017
+
+#build the bodies for the genbank files
+python3 ~/Desktop/scripts/build_gbk_body_from_annotated_list.py 30628_NCTC11168_merged_annotated_list.csv; python3 ~/Desktop/scripts/build_gbk_body_from_annotated_list.py 32968_RM1221_merged_annotated_list.csv; python3 ~/Desktop/scripts/build_gbk_body_from_annotated_list.py 36628_81-176_merged_annotated_list.csv; python3 ~/Desktop/scripts/build_gbk_body_from_annotated_list.py 36628_81-176_pTet_partial_merged_annotated_list.csv; python3 ~/Desktop/scripts/build_gbk_body_from_annotated_list.py 36628_81-176_pVir_complete_merged_annotated_list.csv; python3 ~/Desktop/scripts/build_gbk_body_from_annotated_list.py 38588_doylei_269.97_merged_annotated_list.csv; python3 ~/Desktop/scripts/build_gbk_body_from_annotated_list.py 39008_81116_merged_annotated_list.csv; python3 ~/Desktop/scripts/build_gbk_body_from_annotated_list.py 275748_ICDCCJ07001_merged_annotated_list.csv; python3 ~/Desktop/scripts/build_gbk_body_from_annotated_list.py 275748_ICDCCJ07001_pTet_complete_merged_annotated_list.csv 
+
+
+
+>>> Jan 27th,2017
+
+% prokka-genbank_to_fasta_db Coccus1.gbk Coccus2.gbk Coccus3.gbk Coccus4.gbk > Coccus.faa
+% cdhit -i Coccus.faa -o Coccus -T 0 -M 0 -g 1 -s 0.8 -c 0.9
+% rm -fv Coccus.faa Coccus.bak.clstr Coccus.clstr
+% makeblastdb -dbtype prot -in Coccus
+% mv Coccus.p* /path/to/prokka/db/genus/
+
+prokka-genbank_to_fasta_db ~/Desktop/meta_genome/new_genbank_files/30628_NCTC11168_new.gbk ~/Desktop/meta_genome/new_genbank_files/32968_RM1221_new.gbk ~/Desktop/meta_genome/new_genbank_files/36628_81-176_new.gbk ~/Desktop/meta_genome/new_genbank_files/36628_81-176_pTet_partial_new.gbk ~/Desktop/meta_genome/new_genbank_files/36628_81-176_pVir_complete_new.gbk ~/Desktop/meta_genome/new_genbank_files/38588_doylei_269.97_new.gbk ~/Desktop/meta_genome/new_genbank_files/39008_81116_new.gbk ~/Desktop/meta_genome/new_genbank_files/275748_ICDCCJ07001_pTet_complete_new.gbk ~/Desktop/meta_genome/new_genbank_files/275748_ICDCCJ07001_new.gbk >Campylobacter.faa
+
+cdhit -i Campylobacter.faa -o Campylobacter -T 0 -M 0 -g 1 -s 0.8 -c 0.9
+
+#I decided to keep the intermediate files
+
+makeblastdb -dbtype prot -in Campylobacter
+
+mv Campylobacter.p* ~/prokka/db/genus/
+
+
+#Running some Prokka tests with the new Campylobacter genus DB
+
+parallel prokka --outdir ~/Desktop/prokka_new_db_test/prokka_old_db/{/.} --prefix {/.} --locustag {/.} --force --cpus 1 {} ::: ~/Desktop/prokka_new_db_test/input_genomes/*.fasta
+
+parallel prokka --outdir ~/Desktop/prokka_new_db_test/prokka_new_db_no_genus_option/{/.} --prefix {/.} --locustag {/.} --force --cpus 1 {} ::: ~/Desktop/prokka_new_db_test/input_genomes/*.fasta
+#results for this one were the same as with the old_db
+
+parallel prokka --outdir ~/Desktop/prokka_new_db_test/prokka_new_db_genus_option/{/.} --prefix {/.} --locustag {/.} --force --cpus 1 --genus Campylobacter --usegenus {} ::: ~/Desktop/prokka_new_db_test/input_genomes/*.fasta
+
+
+#This new DB makes a difference so run all the full genomes through
+parallel prokka --outdir ~/Desktop/prokka/new_prokka_db_full_set/{/.} --prefix {/.} --locustag {/.} --force --cpus 1 --genus Campylobacter --usegenus {} ::: ~/Desktop/genomes/campy_full_genomes/no_duplicates_plasmids/*.fasta
+
+roary -p 8 -e -n -z -f ~/Desktop/roary/new_prokka_db_full_set/ ~/Desktop/prokka/new_prokka_db_full_set/*/*.gff
+
+#getting rid of the _no_duplicates that I forgot to remove
+rename 's/(\d+)_no_duplicates\.(.*)/$1\.$2/' *  #you might need sudo
+for file in *; do cd $file; rename -v 's/(\d+)_no_duplicates\.(.*)/$1\.$2/' *; cd ..; done
+
+
+
+>>> Jan 30, 2017
+
+#Testing --addgenes as a fix for missing annotations in Roary step with new Prokka DB
+parallel prokka --addgenes --outdir ~/Desktop/prokka_new_db_test/prokka_new_db_genus_option/{/.} --prefix {/.} --locustag {/.} --force --cpus 1 --genus Campylobacter --usegenus {} ::: ~/Desktop/prokka_new_db_test/input_genomes/*.fasta
+
+roary -p 8 -e -n -z -f ~/Desktop/prokka_new_db_test/roary_step_addgenes ~/Desktop/prokka_new_db_test/prokka_new_db_genus_option/*_no_duplicates/*.gff
+
+#It didn't work so moving on to something more complicated
+
+#Test with Name=___/gene=___/both in .gffs
+roary -p 8 -e -n -z -f ~/Desktop/prokka_new_db_test/roary_step_mod_gff ~/Desktop/prokka_new_db_test/prokka_new_db_test_mod_gff/*/*.gff
+
+#modify Prokka new DB .gffs to contain Name=____ (just a copy of product annotation)
+for dir in *; do cd $dir; python3 ~/Desktop/scripts/add_gene_to_gff_new_db.py *.gff; cd ..; done
+
+roary -p 8 -e -n -z -f ~/Desktop/prokka_new_db_test/roary_step_mod_gff_script ~/Desktop/prokka_new_db_test/prokka_new_db_test_mod_gff/*/*.gff
+
+#So that worked: so now run it on the whole thing
+roary -p 8 -e -n -z -f ~/Desktop/roary/new_prokka_db_full_set/ ~/Desktop/prokka/new_prokka_db_full_set/*/*mod_gene.gff
+
+
+#Test a different custom Prokka DB that had /gene in the input .gbks to verify the cause of the missing annotations in Roary
+parallel prokka --outdir ~/Desktop/prokka_new_db_test/prokka_test_db_gene_tag/{/.} --prefix {/.} --locustag {/.} --force --cpus 1 --genus Test --usegenus {} ::: ~/Desktop/prokka_new_db_test/input_genomes/*.fasta
+
+
+
+>>> Feb 1, 2017
+
+#Rerunning prokka to get my base .gbk's now that I got the RNA thing working
+parallel prokka --outdir {/.} --prefix {/.} --locustag {/.} --force --cpus 1 {} ::: '/home/nadege/Desktop/genomes/campy_full_genomes/no_duplicates_plasmids/30628.fasta' '/home/nadege/Desktop/genomes/campy_full_genomes/no_duplicates_plasmids/32968.fasta' '/home/nadege/Desktop/genomes/campy_full_genomes/no_duplicates_plasmids/36628.fasta' '/home/nadege/Desktop/genomes/campy_full_genomes/no_duplicates_plasmids/38588.fasta' '/home/nadege/Desktop/genomes/campy_full_genomes/no_duplicates_plasmids/39008.fasta' '/home/nadege/Desktop/genomes/campy_full_genomes/no_duplicates_plasmids/275748.fasta' 
+
+for file in *; do python3 ~/Desktop/scripts/extract_info_from_gbk.py $file; done
+
+
+
+>>> Feb 2, 2017
+
+#rerun extract_info to add tags to gene names and protein id for easier identification and comparison in build_gbk_body + dictionary
+for file in *.gbk; do python3 ~/Desktop/scripts/extract_info_from_gbk.py $file; done
+
+#Re-build the .gbk body for each genome using the modified buil_gbk_body script and the full initial .gbk's
+python3 build_gbk_body_from_annotated_list.py /home/nadege/Desktop/prokka_db_creation/new_genbank_files/merged_annotated_lists_by_genome/30628_NCTC11168_merged_annotated_list.csv /home/nadege/Desktop/prokka_db_creation/all_genbank_files_prokka_DB_test/30628_NCTC11168_ncbi_genes_info.csv /home/nadege/Desktop/prokka_db_creation/all_genbank_files_prokka_DB_test/30628_NCTC11168_prokka_rna_genes_info.csv /home/nadege/Desktop/prokka_db_creation/all_genbank_files_prokka_DB_test/30628_NCTC11168_rast_genes_info.csv 
+
+python3 build_gbk_body_from_annotated_list.py /home/nadege/Desktop/prokka_db_creation/new_genbank_files/merged_annotated_lists_by_genome/32968_RM1221_merged_annotated_list.csv /home/nadege/Desktop/prokka_db_creation/all_genbank_files_prokka_DB_test/32968_RM1221_ncbi_genes_info.csv /home/nadege/Desktop/prokka_db_creation/all_genbank_files_prokka_DB_test/32968_RM1221_prokka_rna_genes_info.csv /home/nadege/Desktop/prokka_db_creation/all_genbank_files_prokka_DB_test/32968_RM1221_rast_genes_info.csv 
+
+python3 build_gbk_body_from_annotated_list.py /home/nadege/Desktop/prokka_db_creation/new_genbank_files/merged_annotated_lists_by_genome/36628_81-176_merged_annotated_list.csv /home/nadege/Desktop/prokka_db_creation/all_genbank_files_prokka_DB_test/36628_81-176_ncbi_genes_info.csv /home/nadege/Desktop/prokka_db_creation/all_genbank_files_prokka_DB_test/36628_81-176_prokka_rna_genes_info.csv /home/nadege/Desktop/prokka_db_creation/all_genbank_files_prokka_DB_test/36628_81-176_rast_genes_info.csv 
+
+python3 build_gbk_body_from_annotated_list.py /home/nadege/Desktop/prokka_db_creation/new_genbank_files/merged_annotated_lists_by_genome/36628_81-176_pTet_partial_merged_annotated_list.csv /home/nadege/Desktop/prokka_db_creation/all_genbank_files_prokka_DB_test/36628_81-176_prokka_rna_genes_info.csv /home/nadege/Desktop/prokka_db_creation/all_genbank_files_prokka_DB_test/36628_81-176_pTet_partial_ncbi_genes_info.csv /home/nadege/Desktop/prokka_db_creation/all_genbank_files_prokka_DB_test/36628_81-176_rast_genes_info.csv 
+
+python3 build_gbk_body_from_annotated_list.py /home/nadege/Desktop/prokka_db_creation/new_genbank_files/merged_annotated_lists_by_genome/36628_81-176_pVir_complete_merged_annotated_list.csv /home/nadege/Desktop/prokka_db_creation/all_genbank_files_prokka_DB_test/36628_81-176_prokka_rna_genes_info.csv /home/nadege/Desktop/prokka_db_creation/all_genbank_files_prokka_DB_test/36628_81-176_pVir_complete_ncbi_genes_info.csv /home/nadege/Desktop/prokka_db_creation/all_genbank_files_prokka_DB_test/36628_81-176_rast_genes_info.csv 
+
+python3 build_gbk_body_from_annotated_list.py /home/nadege/Desktop/prokka_db_creation/new_genbank_files/merged_annotated_lists_by_genome/38588_doylei_269.97_merged_annotated_list.csv /home/nadege/Desktop/prokka_db_creation/all_genbank_files_prokka_DB_test/38588_doylei_269.97_ncbi_genes_info.csv /home/nadege/Desktop/prokka_db_creation/all_genbank_files_prokka_DB_test/38588_doylei_269.97_prokka_rna_genes_info.csv /home/nadege/Desktop/prokka_db_creation/all_genbank_files_prokka_DB_test/38588_doylei_269.97_rast_genes_info.csv 
+
+python3 build_gbk_body_from_annotated_list.py /home/nadege/Desktop/prokka_db_creation/new_genbank_files/merged_annotated_lists_by_genome/39008_81116_merged_annotated_list.csv /home/nadege/Desktop/prokka_db_creation/all_genbank_files_prokka_DB_test/39008_81116_ncbi_genes_info.csv /home/nadege/Desktop/prokka_db_creation/all_genbank_files_prokka_DB_test/39008_81116_prokka_rna_genes_info.csv /home/nadege/Desktop/prokka_db_creation/all_genbank_files_prokka_DB_test/39008_81116_rast_genes_info.csv 
+
+python3 build_gbk_body_from_annotated_list.py /home/nadege/Desktop/prokka_db_creation/new_genbank_files/merged_annotated_lists_by_genome/275748_ICDCCJ07001_merged_annotated_list.csv /home/nadege/Desktop/prokka_db_creation/all_genbank_files_prokka_DB_test/275748_ICDCCJ07001_ncbi_genes_info.csv /home/nadege/Desktop/prokka_db_creation/all_genbank_files_prokka_DB_test/275748_ICDCCJ07001_prokka_rna_genes_info.csv /home/nadege/Desktop/prokka_db_creation/all_genbank_files_prokka_DB_test/275748_ICDCCJ07001_rast_genes_info.csv 
+
+python3 build_gbk_body_from_annotated_list.py /home/nadege/Desktop/prokka_db_creation/new_genbank_files/merged_annotated_lists_by_genome/275748_ICDCCJ07001_pTet_complete_merged_annotated_list.csv /home/nadege/Desktop/prokka_db_creation/all_genbank_files_prokka_DB_test/275748_ICDCCJ07001_pTet_complete_ncbi_genes_info.csv /home/nadege/Desktop/prokka_db_creation/all_genbank_files_prokka_DB_test/275748_ICDCCJ07001_prokka_rna_genes_info.csv /home/nadege/Desktop/prokka_db_creation/all_genbank_files_prokka_DB_test/275748_ICDCCJ07001_rast_genes_info.csv 
+
+
+prokka-genbank_to_fasta_db ~/Desktop/prokka_db_creation/new_genbank_files/30628_NCTC11168_new.gbk ~/Desktop/prokka_db_creation/new_genbank_files/32968_RM1221_new.gbk ~/Desktop/prokka_db_creation/new_genbank_files/36628_81-176_new.gbk ~/Desktop/prokka_db_creation/new_genbank_files/36628_81-176_pTet_partial_new.gbk ~/Desktop/prokka_db_creation/new_genbank_files/36628_81-176_pVir_complete_new.gbk ~/Desktop/prokka_db_creation/new_genbank_files/38588_doylei_269.97_new.gbk ~/Desktop/prokka_db_creation/new_genbank_files/39008_81116_new.gbk ~/Desktop/prokka_db_creation/new_genbank_files/275748_ICDCCJ07001_pTet_complete_new.gbk ~/Desktop/prokka_db_creation/new_genbank_files/275748_ICDCCJ07001_new.gbk >Campylobacter.faa
+
+cdhit -i Campylobacter.faa -o Campylobacter -T 0 -M 0 -g 1 -s 0.8 -c 0.9
+makeblastdb -dbtype prot -in Campylobacter
+mv Campylobacter.p* ~/prokka/db/genus/
+
+
+#Run this new Prokka DB on a sample and then Roary (testing)
+
+parallel prokka --outdir ~/Desktop/prokka_new_db_test/prokka_corrected_new_db/{/.} --prefix {/.} --locustag {/.} --force --cpus 1 --genus Campylobacter --usegenus {} ::: ~/Desktop/prokka_new_db_test/input_genomes/*.fasta
+
+roary -r -p 8 -e -n -z -f ~/Desktop/prokka_new_db_test/roary_corrected_new_db ~/Desktop/prokka_new_db_test/prokka_corrected_new_db/*/*.gff
+
+
+#If all goes well (seems okay) run on full set
+parallel prokka --outdir ~/Desktop/prokka/corrected_prokka_db_full_set/{/.} --prefix {/.} --locustag {/.} --force --cpus 1 --genus Campylobacter --usegenus {} ::: ~/Desktop/genomes/campy_full_genomes/no_duplicates_plasmids/*.fasta
+
+roary -r -p 8 -e -n -z -f ~/Desktop/roary/corrected_prokka_db_full_set/ ~/Desktop/prokka/new_prokka_db_full_set/*/*.gff
+
+
+
+>>> Feb 3, 2017
+
+#Checking to see if there are any obvious outliers in the prokka annotation step (full set, no duplicates, plasmids) by looking at % of hypotheticals
+for dir in *; do cd $dir; total=$(grep -c ">" *.faa); hyp=$(grep -c "hypothetical protein" *.faa); result=$(bc -l <<<  $hyp/$total); echo "$dir: $hyp $total $result"; cd ..; done >result.txt
+
+#count the number of genomes/plasmids
+for dir in *; do cd $dir; ((total+=$(grep -c "LOCUS " *.gbk))); cd ..; done
+#Better way (faster too)
+cat */*.gbk | grep -c "LOCUS "
+
+#Generate some more plots with script included in Roary distribution at this location:
+#/home/nadege/.cpan/build/Bio-Roary-3.7.0-PNg97C/contrib/roary_plots/roary_plots.py
+python3 /home/nadege/.cpan/build/Bio-Roary-3.7.0-PNg97C/contrib/roary_plots/roary_plots.py accessory_binary_genes.fa.newick gene_presence_absence.csv
+
+#I ran Roary with the wrong Prokka output yesterday so I'm rerunning it with the right input now
+roary -v -r -p 8 -e -n -z -f ~/Desktop/roary/corrected_prokka_db_full_set/ ~/Desktop/prokka/corrected_prokka_db_full_set/*/*.gff
+
+#Plots and more plots!
+python3 /home/nadege/.cpan/build/Bio-Roary-3.7.0-PNg97C/contrib/roary_plots/roary_plots.py accessory_binary_genes.fa.newick gene_presence_absence.csv
+./roary2svg.pl gene_presence_absence.csv > pan_genome.svg #(actually too big to be of much use)
+
+#Run a kraken test just to make sure that everything I'm using as input is C. jejuni
+kraken --db ~/Desktop/kraken/minikraken_20141208 --threads 8 --fasta-input ~/Desktop/genomes/campy_full_genomes/no_duplicates_plasmids/*.fasta > ~/Desktop/kraken/no_duplicates_plasmids/results.txt
+
+kraken-report --db ~/Desktop/kraken/minikraken_20141208 ~/Desktop/kraken/no_duplicates_plasmids/results.txt > ~/Desktop/kraken/no_duplicates_plasmids/report.txt
+
+kraken-translate --db ~/Desktop/kraken/minikraken_20141208 ~/Desktop/kraken/no_duplicates_plasmids/results.txt > ~/Desktop/kraken/no_duplicates_plasmids/translation.txt
+
+
+#Found one unclassified sequence with Kraken (one short plasmid) so I removed it and I'm reruning Roary to see if excluding it will make a difference
+roary -v -r -p 8 -e -n -z -f ~/Desktop/roary/corrected_prokka_db_full_set_exclude_CP017855/ ~/Desktop/prokka/corrected_prokka_db_full_set/*/*.gff
+
+
+
+>>> Feb 6, 2017
+
+#I need a full set with the old prokka DB and Rplots for comparison so rerun that with extra flags
+roary -v -r -p 8 -e -n -z -f ~/Desktop/roary/full_genomes/no_duplicates_plasmids_rPlots ~/Desktop/prokka/complete_assembly_genomes/no_duplicates_plasmids/*/*.gff
+
+python3 /home/nadege/.cpan/build/Bio-Roary-3.7.0-PNg97C/contrib/roary_plots/roary_plots.py accessory_binary_genes.fa.newick gene_presence_absence.csv
+
+#Excluding 61s
+roary -v -r -p 8 -e -n -z -f ~/Desktop/roary/corr_db_exc_61s ~/Desktop/prokka/corrected_db_exc_61s/*/*.gff
+
+python3 /home/nadege/.cpan/build/Bio-Roary-3.7.0-PNg97C/contrib/roary_plots/roary_plots.py accessory_binary_genes.fa.newick gene_presence_absence.csv
+
+#Just 61s
+roary -v -r -p 8 -e -n -z -f ~/Desktop/roary/corr_db_just_61s ~/Desktop/prokka/corrected_db_just_61s/*/*.gff
+
+python3 /home/nadege/.cpan/build/Bio-Roary-3.7.0-PNg97C/contrib/roary_plots/roary_plots.py accessory_binary_genes.fa.newick gene_presence_absence.csv
+
+#Blast doylei (38588) to reference genome (30628)
+blastn -query '/home/nadege/Desktop/genomes/campy_full_genomes/no_duplicates_plasmids/38588.fasta' -subject '/home/nadege/Desktop/genomes/campy_full_genomes/no_duplicates_plasmids/30628.fasta' -outfmt 7 -out ~/Desktop/blast_output_doylei_to_ref_genome.csv
+blastp -query '/home/nadege/Desktop/prokka/corrected_prokka_db_full_set/38588/38588.faa' -subject '/home/nadege/Desktop/prokka/corrected_prokka_db_full_set/1_30628/30628.faa' -outfmt 7 -out ~/Desktop/blast_output_doylei_to_ref_genome_prot.csv
+
+#Testing annotations for metagenome
+prokka --outdir ~/Desktop/metagenome/prokka/standard_annotation/ --prefix metagenome --locustag metagenome --force --cpus 8 --genus Campylobacter --usegenus ~/Desktop/metagenome/sample_standard_pan_gen_ref.fa
+
+prokka --outdir ~/Desktop/metagenome/prokka/mod_annotation/ --prefix metagenome --locustag metagenome --force --cpus 8 --genus Campylobacter --usegenus ~/Desktop/metagenome/sample_mod_pan_gen_ref.fa
+
+roary -v -r -p 8 -e -n -z -f ~/Desktop/metagenome/roary_standard_annotation/ ~/Desktop/metagenome/prokka_standard_annotation/*.gff
+
+
+#Annotating full pan_genome_ref.fa
+prokka --outdir ~/Desktop/metagenome/prokka_full_pangenome/ --prefix metagenome --locustag metagenome --force --cpus 8 --genus Campylobacter --usegenus ~/Desktop/metagenome/full_pan_genome_reference.fa
+
+
+
+>>> Feb 7, 2017
+
+#Running MIST
+#TEMPLATE# 
+#parallel MIST.exe -a path/to/gene/fastas -t /path/to/cgmlst.markers -T /some/temp/dir -b -j path/for/output/{/.}.json {} ::: path/to/genomes/*.fasta
+
+parallel MIST.exe -a ~/mist/needed_files/alleles -t ~/mist/needed_files/core.markers -T ~/Desktop/mist/108_genomes/temp_data/ -b -j ~/Desktop/mist/108_genomes/{/.}.json {} ::: ~/Desktop/genomes/campy_full_genomes/no_duplicates_plasmids/*.fasta
+
+#Make MIST output useful
+python3 update_definitions.py -a ~/mist/needed_files/alleles/ -j ~/Desktop/mist/108_genomes/jsons/ -t core
+python3 json2csv.py -j /home/nadege/Desktop/mist/108_genomes/jsons/ -o /home/nadege/Desktop/mist/108_genomes/json_out.csv -t core
+
+#Rerun the old full set with the new Prokka DB first
+parallel prokka --outdir ~/Desktop/prokka/old_full_set_97/{/.} --prefix {/.} --locustag {/.} --force --cpus 1 --genus Campylobacter --usegenus {} ::: ~/Desktop/genomes/test_genomes/*.fasta
+
+#Run Roary on old full set 97 without the metagenome
+roary -v -r -p 8 -e -n -z -f ~/Desktop/roary/old_full_set_97_no_meta/ ~/Desktop/prokka/old_full_set_97/*/*.gff
+python3 /home/nadege/.cpan/build/Bio-Roary-3.7.0-PNg97C/contrib/roary_plots/roary_plots.py accessory_binary_genes.fa.newick gene_presence_absence.csv
+
+#Run Roary on old full set 97 including the metagenome as the first file (don't know if this will work...)
+roary -v -r -p 8 -e -n -z -f ~/Desktop/roary/old_full_set_97_meta/ ~/Desktop/metagenome/prokka_full_pangenome/0_metagenome.gff ~/Desktop/prokka/old_full_set_97/*/*.gff
+python3 /home/nadege/.cpan/build/Bio-Roary-3.7.0-PNg97C/contrib/roary_plots/roary_plots.py accessory_binary_genes.fa.newick gene_presence_absence.csv
+
+
+
+>>> Feb 8, 2017
+
+roary -v -r -p 8 -e -n -z -f ~/Desktop/roary/old_full_set_97_meta0/ ~/Desktop/metagenome/prokka_full_pangenome/0_metagenome.gff ~/Desktop/prokka/old_full_set_97/*/*.gff
+python3 /home/nadege/.cpan/build/Bio-Roary-3.7.0-PNg97C/contrib/roary_plots/roary_plots.py accessory_binary_genes.fa.newick gene_presence_absence.csv
+
+
+
+>>> Feb 9, 2017
+
+#Build a new metagenome for testing incorporating the info from running the old 97 with the previous metagenome
+prokka --outdir ~/Desktop/metagenome/prokka_pangenome_add_old_97/ --prefix 0_metagenome --locustag 0_metagenome --force --cpus 8 --genus Campylobacter --usegenus ~/Desktop/roary/old_full_set_97_meta0/pan_genome_reference.fa
+
+#Run MIST on old 97 so you can make another tanglegram for those
+parallel MIST.exe -a ~/mist/needed_files/alleles -t ~/mist/needed_files/core.markers -T ~/Desktop/mist/old_97/temp_data/ -b -j ~/Desktop/mist/old_97/{/.}.json {} ::: ~/Desktop/genomes/test_genomes/*.fasta
+python3 update_definitions.py -a ~/mist/needed_files/alleles/ -j ~/Desktop/mist/old_97/jsons/ -t core
+python3 json2csv.py -j /home/nadege/Desktop/mist/old_97/jsons/ -o /home/nadege/Desktop/mist/old_97/json_out.csv -t core
+
+#Run subset 23 and subset 74 with the new metagenome
+roary -v -r -z -p 8 -e -n -f ~/Desktop/roary/roary_test74_meta0 ~/Desktop/metagenome/prokka_pangenome_add_old_97/0_metagenome2.gff ~/Desktop/prokka/subset74/*/*.gff
+python3 /home/nadege/.cpan/build/Bio-Roary-3.7.0-PNg97C/contrib/roary_plots/roary_plots.py accessory_binary_genes.fa.newick gene_presence_absence.csv
+
+roary -v -r -z -p 8 -e -n -f ~/Desktop/roary/roary_test23_meta0 ~/Desktop/metagenome/prokka_pangenome_add_old_97/0_metagenome2.gff ~/Desktop/prokka/subset23/*/*.gff
+python3 /home/nadege/.cpan/build/Bio-Roary-3.7.0-PNg97C/contrib/roary_plots/roary_plots.py accessory_binary_genes.fa.newick gene_presence_absence.csv
+
+
+
+>>> Feb 10, 2017
+
+#rerun the susbsets with a modified metagenome to test annotation
+#"hypothetical protein" --> "unknown"
+roary -v -r -z -p 8 -e -n -f ~/Desktop/roary/roary_test23_meta0_unknown ~/Desktop/metagenome/prokka_pangenome_add_old_97/0_metagenome2.gff ~/Desktop/prokka/subset23/*/*.gff
+#something weird happens to the annotations when they go through :Roary
+#some stuff that is annotated (non-hypothetical), that gets stripped of its annotation and place dinto groups...
+
+
+
+>>> Feb 13, 2017
+
+#Couldn't run it over the weekend because of too long contig names
+
+#Gonna run this on kashyyyk because it would take a few days otherwise
+parallel prokka --outdir /home/phac/nadege/prokka/big_set/{/.} --prefix {/.} --locustag {/.} --force --cpus 1 --genus Campylobacter_nad --usegenus {} ::: /home/phac/nadege/genomes/*.fasta
+
+#Found lots of %2C in the .gff prokka output files => reaplces them all with a space and ran this again just to check
+roary -v -r -z -p 8 -e -n -f ~/Desktop/roary/roary_test23_meta0_unknown_no%2C ~/Desktop/metagenome/prokka_pangenome_add_old_97/0_metagenome2.gff ~/Desktop/prokka/subset23/*/*.gff
+
+#Trying panseq on 108 no duplicates plasmids
+#From ~/Panseq
+perl lib/panseq.pl settings.txt
+
+#roary metagenome once more but with "hypothetical protein" --> "mystery_#" and added gene and Name fields (same as product name)
+roary -v -r -z -p 8 -e -n -f ~/Desktop/roary/roary_test23_meta0_unique_mysteries ~/Desktop/metagenome/prokka_pangenome_add_old_97/0_metagenome2_mysterious.gff ~/Desktop/prokka/subset23/*/*.gff
+
+
+
+>>> Feb 14, 2017
+
+#run Roary on the big_set in kashyyyk, don't bother with a metagenome for now
+roary -v -r -z -p 64 -e -n -f /home/phac/nadege/roary/big_set/ /home/phac/nadege/prokka/big_set/*/*.gff
+
+#rerun this for more info to see if non-determinism if part of the annotation screwiness/stripping
+roary -v -r -z -p 8 -e -n -f ~/Desktop/roary/roary_test23_meta0_unique_mysteries ~/Desktop/metagenome/prokka_pangenome_add_old_97/0_metagenome2_mysterious.gff ~/Desktop/prokka/subset23/*/*.gff
+
+#Much more limited test to make it more manageable
+roary -v -z -p 7 -e -n -f ~/Desktop/roary/mysterious_test_1 ~/Desktop/metagenome/prokka_pangenome_add_old_97/0_metagenome2_mysterious.gff ~/Desktop/prokka/subset23/ERR348885/*.gff
+
+
+
+>>> Feb 15, 2017
+
+#Make a new meta from the current one with different locus tags to avoid confusion 
+prokka --outdir ~/Desktop/metagenome/myst_meta_1/ --prefix myst_meta_1 --locustag myst_meta_1 --force --cpus 7 --genus Campylobacter --usegenus ~/Desktop/metagenome/prokka_pangenome_add_old_97/0_metagenome.fna
+
+
+
+>>> Feb 16, 2017
+
+#Go back to an older pan_genome_ref.fa (before some annotations go missing) (restart at 1st metagenome step and surveil missing/changing sequences/annotations)
+prokka --outdir ~/Desktop/metagenome/restart_meta_1/ --prefix r_meta_1 --locustag meta --force --cpus 7 --genus Campylobacter --usegenus ~/Desktop/roary/corrected_prokka_db_full_set_exclude_CP017855/pan_genome_reference.fa
+
+#Sequences are missing because Prokka uses Prodigal to predict CDSs and since they're all separate already I guess Prodigal doesn't catch everything...
+#So try Prokka with the --fast option to turn off CDS/product searching
+prokka --fast --outdir ~/Desktop/metagenome/restart_meta_1_fast/ --prefix r_meta_1 --locustag meta --force --cpus 7 --genus Campylobacter --usegenus ~/Desktop/roary/corrected_prokka_db_full_set_exclude_CP017855/pan_genome_reference.fa
+#L->that's not what fast does, so it still used Prodigal...
+
+#Prodigal is currently being used in normal mode, but it has a mode that is better suited to metagenomes (highly fragmented) and Prokka has an option to toggle that:
+prokka --metagenome --outdir ~/Desktop/metagenome/restart_meta_1_meta_opt/ --prefix r_meta_1 --locustag meta --force --cpus 7 --genus Campylobacter --usegenus ~/Desktop/roary/corrected_prokka_db_full_set_exclude_CP017855/pan_genome_reference.fa
+#Better, but still missing some sequences...
+
+#I changed the prodigal command inside Prokka slightly so it would save the output in a separate file
+prokka --metagenome --outdir ~/Desktop/metagenome/restart_meta_1_meta_opt_sco/ --prefix r_meta_1 --locustag meta --force --cpus 7 --genus Campylobacter --usegenus ~/Desktop/roary/corrected_prokka_db_full_set_exclude_CP017855/pan_genome_reference.fa
+
+#testing some things in the Prokka code...
+prokka --metagenome --outdir ~/Desktop/metagenome/testing/trace --prefix r_meta_1 --locustag meta --force --cpus 7 --genus Campylobacter --usegenus ~/Desktop/roary/corrected_prokka_db_full_set_exclude_CP017855/pan_genome_reference.fa
+
+
+
+>>> Feb 17, 2017
+
+#Setting aside Prokka's missing sequences for now and focusing on Roary stripping annotations:
+
+#Run Roary on a smaller subset of the NCBI genomes that contain serquences that were stripped of their annotation in the full run (corrected_prokka_db_full_set_exclude_CP017855)
+roary -v -z -p 7 -e -n -f ~/Desktop/roary_stripped_annotations/initial_run ~/Desktop/prokka/sample_testing_missing_annotations/*/*.gff
+
+#Run it more than once to see if stripping is consistent
+roary -v -z -p 7 -e -n -f ~/Desktop/roary_stripped_annotations/initial_run2 ~/Desktop/prokka/sample_testing_missing_annotations/*/*.gff
+roary -v -z -p 7 -e -n -f ~/Desktop/roary_stripped_annotations/initial_run3 ~/Desktop/prokka/sample_testing_missing_annotations/*/*.gff
+roary -v -z -p 7 -e -n -f ~/Desktop/roary_stripped_annotations/initial_run4 ~/Desktop/prokka/sample_testing_missing_annotations/*/*.gff
+roary -v -z -p 7 -e -n -f ~/Desktop/roary_stripped_annotations/initial_run5 ~/Desktop/prokka/sample_testing_missing_annotations/*/*.gff
+roary -v -z -p 7 -e -n -f ~/Desktop/roary_stripped_annotations/initial_run6 ~/Desktop/prokka/sample_testing_missing_annotations/*/*.gff
+
+#Test with 1_ prefix to 30628 sequences
+roary -v -z -p 7 -e -n -f ~/Desktop/roary_stripped_annotations/1_prefix_on_30628 ~/Desktop/prokka/sample_testing_missing_annotations/*/*.gff
+
+
+
+>>> Feb 20, 2017
+
+#Try blasting some sequences that are being stripped of their annotation against the big set to see if we could exclude them or if they're quite prevalent
+
+cat * >big_set.fasta
+blastn -query ~/Desktop/roary_stripped_annotations/selected_seqs.fa -subject ~/Desktop/genomes/big_set/big_set.fasta -outfmt 7 -out ~/Desktop/roary_stripped_annotations/blast_output.csv
+
+#Same thing but with missing Prokka sequences (what I was supposed to do)
+blastn -query ~/Desktop/sample_missing_prokka_seqs.fa -subject ~/Desktop/genomes/big_set/big_set.fasta -outfmt 7 -out ~/Desktop/blast_output.csv
+
+
+#Trying to bypass Prodigal
+#Test old prokka and prokka-metagenome to compare
+prokka --prefix test_old --locustag old --usegenus --genus Campylobacter --metagenome ~/Desktop/roary/corrected_prokka_db_full_set_exclude_CP017855/pan_genome_reference.fa
+prokka-metagenome --prefix test_new --locustag new --usegenus --genus Campylobacter --metagenome ~/Desktop/roary/corrected_prokka_db_full_set_exclude_CP017855/pan_genome_reference.fa
+
+#I'm losing all my sequences in the new one but I don't know why... *ugh*
+
+
+
+>>> Feb 21, 2017 
+
+#Redo the test with a smaller sample so printing out a trace is reasonable
+prokka --prefix test_old_sample --locustag old --force --usegenus --genus Campylobacter --metagenome ~/Desktop/pangenome_sample.fa
+prokka-metagenome --prefix test_new_sample --locustag new --force --usegenus --genus Campylobacter --metagenome ~/Desktop/pangenome_sample.fa
+
+#Yay! Got it working. Now redo the bigger test
+prokka --prefix test_old --locustag old --force --usegenus --genus Campylobacter --metagenome ~/Desktop/roary/corrected_prokka_db_full_set_exclude_CP017855/pan_genome_reference.fa
+prokka-metagenome --prefix test_new --locustag new --force --usegenus --genus Campylobacter --metagenome ~/Desktop/roary/corrected_prokka_db_full_set_exclude_CP017855/pan_genome_reference.fa
+
+#"hypothetical protein" --> "mystery_#" is looking good so start testing it (the metagenome option isn't strictly necessary but I'm including it just in case it had some other role to play that I did not notice
+#setup
+prokka-metagenome --outdir ~/Desktop/metagenome/prokka-metagenome/first_test --force --prefix 0_meta --locustag 0_meta --genus Campylobacter --usegenus --metagenome --cpus 7 ~/Desktop/roary/corrected_prokka_db_full_set_exclude_CP017855/pan_genome_reference.fa
+#clean/prep script
+python3 /home/nadege/Desktop/scripts/unique_mysteries.py /home/nadege/Desktop/metagenome/prokka-metagenome/0_meta.gff
+
+#get the old 97 running with our new meta
+roary -v -z -p 7 -e -n -f ~/Desktop/roary/old_97_refined_meta ~/Desktop/metagenome/prokka-metagenome/0_meta_0_mystified.gff ~/Desktop/prokka/old_full_set_97/*/*.gff
+
+
+
+>>> Feb 22, 2017
+
+#Quick little bash script
+scripts/./remove_comma_codes.sh ~/Desktop/metagenome/prokka-metagenome/0_meta.gff
+
+python3 /home/nadege/Desktop/scripts/unique_mysteries.py /home/nadege/Desktop/metagenome/prokka-metagenome/0_meta.gff.out
+
+#get old_gene_names and seq_ids
+python3 ~/Desktop/scripts/extract_oldid_oldgenename.py  ~/Desktop/roary/corrected_prokka_db_full_set_exclude_CP017855/pan_genome_reference.fa
+
+
+#rerunnning this now that changes have been made to the meta
+roary -v -z -p 7 -e -n -f ~/Desktop/roary/old_97_refined_meta ~/Desktop/metagenome/prokka-metagenome/0_meta_0_mystified.gff ~/Desktop/prokka/old_full_set_97/*/*.gff
+
+#using the files created by unique_mysteries.py and by extract_oldid_oldgenename.py change the gene names in a copy of gen_presence_absence.Rtab
+python3 /home/nadege/Desktop/scripts/old2new_gene_names.py ~/Desktop/metagenome/prokka-metagenome/oldgenename2seqid.txt ~/Desktop/metagenome/prokka-metagenome/seqid2newgenename.txt ~/Desktop/roary/corrected_prokka_db_full_set_exclude_CP017855/gene_presence_absence.Rtab 
+
+
+#Run all the other needed scripts in preparation for a merge
+
+#prokka-metagenome
+prokka-metagenome --outdir ~/Desktop/metagenome/first_merge_contender --force --prefix 0_meta_1 --locustag 0_meta_1 --genus Campylobacter --usegenus --metagenome --cpus 7 ~/Desktop/roary/old_97_refined_meta/pan_genome_reference.fa
+
+#clean up %2C 
+/home/nadege/Desktop/scripts/./remove_comma_codes.sh ~/Desktop/metagenome/first_merge_contender/0_meta_1.gff
+
+#unique mysteries (prep/clean up)
+python3 /home/nadege/Desktop/scripts/unique_mysteries.py /home/nadege/Desktop/metagenome/first_merge_contender/0_meta_1.gff.out
+
+#get old gene names to seq ids
+python3 ~/Desktop/scripts/extract_oldid_oldgenename.py  ~/Desktop/roary/old_97_refined_meta/pan_genome_reference.fa
+
+#rename genes in gene_pres_abs.Rtab
+python3 /home/nadege/Desktop/scripts/old2new_gene_names.py ~/Desktop/metagenome/first_merge_contender/oldgenename2seqid.txt ~/Desktop/metagenome/first_merge_contender/seqid2newgenename.txt ~/Desktop/roary/old_97_refined_meta/gene_presence_absence.Rtab
+
+
+ 
+>>> Feb 23, 2017
+
+#Get MIST running on kashyyyk (quite finnicky for some reason, had to make my wrapper more rigid)
+#wrapper:
+mist -a /home/phac/nadege/mist_needed_files/alleles -t mist_needed_files/core.markers -T /home/phac/nadege/mist/temp_data/ -b -j /home/phac/nadege/mist/output/$(basename $1).json $1; rm -rf /home/phac/nadege/mist/temp_data/$(basename $1)*;
+#cmd:
+parallel program/mist-wrapper {} ::: genomes/*.fasta
+
+#the rplots scripts I had disappeared and now it doens't work anymore...
+
+#Concatenate both pan_genome_refs to attempt a cd-hit-est
+cat roary/corrected_prokka_db_full_set_exclude_CP017855/pan_genome_reference.fa roary/old_97_refined_meta/pan_genome_reference.fa > metagenome/cd-hit-est_attempt/both_pan_gens.fa
+
+#Run cd-hit-est on that (fairly stringent paramters) (applied "patch" to print full description)
+cd-hit-est -i both_pan_gens.fa -o both_pan_gens_clstrd -c 0.99 -T 7 -n 11 -d 0 -s 0.99 -g 1
+
+#Need to check if doing cd-hit-est on the separate pan_gens, then concatenate, then cd-hist-est again gives same result as cat first then cd-hit-est
+cd-hit-est -i pan_genome_reference.fa -o pan_gen_108_clstrd.fa -c 0.99 -T 7 -n 11 -d 0 -s 0.99 -g 1
+cd-hit-est -i pan_genome_reference.fa -o pan_gen_97_clstrd.fa -c 0.99 -T 7 -n 11 -d 0 -s 0.99 -g 1
+cat pan_gen_97_clstrd.fa pan_gen_108_clstrd.fa > pan_gen_97_108.fa
+cd-hit-est -i pan_gen_97_108.fa -o pan_gen_97_108_clstrd.fa -c 0.99 -T 7 -n 11 -d 0 -s 0.99 -g 1
+
+
+
+>>> Feb 27, 2017
+
+#parse the .clstr files of each individually clustered pan_genome
+python3 extract_groups_from_clstr.py ~/Desktop/metagenome/cd-hit-est_attempt/pan_gen_97_clstrd.fa.clstr
+python3 extract_groups_from_clstr.py ~/Desktop/metagenome/cd-hit-est_attempt/pan_gen_108_clstrd.fa.clstr 
+
+
+
+>>> Feb 28, 2017
+
+#ran my intrafile_merge.R script on pan_gen_97 and pan_gen_98
+#files produced:
+gene_presence_absence_97.Rtab
+gene_presence_absence_108.Rtab
+
+#parse the .clstr file from the concatenated clustered pan_genome
+python3 extract_groups_from_clstr.py ~/Desktop/metagenome/cd-hit-est_attempt/pan_gen_97_108_clstrd.fa.clstr
+
+
+
+
+>>> March 1, 2017
+
+#I need to rerun things that involved my extract groups from clstr script because it didn't guarantee that the representative would be the first one the list... 
+#first parse
+python3 extract_groups_from_clstr.py ~/Desktop/metagenome/cd-hit-est_attempt/pan_gen_97_clstrd.fa.clstr
+python3 extract_groups_from_clstr.py ~/Desktop/metagenome/cd-hit-est_attempt/pan_gen_108_clstrd.fa.clstr 
+#intrafile merge with R script
+python3 extract_groups_from_clstr.py ~/Desktop/metagenome/cd-hit-est_attempt/pan_gen_97_108_clstrd.fa.clstr
+
+#rename the seqIDs in pan_genome_ref before running cd-hit and everything
+sed -r -i.orig 's/(>.*)$/\1\.1/g' pan_genome_reference_97.fa
+sed -r -i.orig 's/(>.*)$/\1\.2/g' pan_genome_reference_108.fa
+
+cd-hit-est -i pan_genome_reference_97.fa -o pan_gen_97_clstrd.fa -c 0.99 -T 7 -n 11 -d 0 -s 0.99 -g 1
+cd-hit-est -i pan_genome_reference_108.fa -o pan_gen_108_clstrd.fa -c 0.99 -T 7 -n 11 -d 0 -s 0.99 -g 1
+cat pan_gen_97_clstrd.fa pan_gen_108_clstrd.fa > pan_gen_97_108.fa
+cd-hit-est -i pan_gen_97_108.fa -o pan_gen_97_108_clstrd.fa -c 0.99 -T 7 -n 11 -d 0 -s 0.99 -g 1
+
+python3 extract_groups_from_clstr.py ~/Desktop/metagenome/cd-hit-est_attempt/pan_gen_97_clstrd.fa.clstr
+python3 extract_groups_from_clstr.py ~/Desktop/metagenome/cd-hit-est_attempt/pan_gen_108_clstrd.fa.clstr 
+
+python3 extract_groups_from_clstr.py ~/Desktop/metagenome/cd-hit-est_attempt/pan_gen_97_108_clstrd.fa.clstr
+
+
+
+>>> March 2, 2017
+
+#Run Roary on 97+108+refined meta to have something to compare my merged stuff to
+roary -v -z -p 7 -e -n -f ~/Desktop/roary/97_108_refined_meta ~/Desktop/metagenome/prokka-metagenome/0_meta_0_mystified.gff ~/Desktop/prokka/old_full_set_97/*/*.gff ~/Desktop/prokka/corrected_prokka_db_full_set/*/*.gff
+
+compile_stats.R
+
+#most recent merging files moved from metagenome to merging (both Desktop folders)
+
+
+
+>>> March 3, 2017
+
+#try rerunning my cd-hit merge but only cluster duplicate sequences (-c 1 -s 1)
+cd-hit-est -i pan_genome_reference_97.fa -o pan_gen_97_clstrd.fa -c 1 -T 7 -n 11 -d 0 -s 1 -g 1
+cd-hit-est -i pan_genome_reference_108.fa -o pan_gen_108_clstrd.fa -c 1 -T 7 -n 11 -d 0 -s 1 -g 1
+cat pan_gen_97_clstrd.fa pan_gen_108_clstrd.fa > pan_gen_97_108.fa
+cd-hit-est -i pan_gen_97_108.fa -o pan_gen_97_108_clstrd.fa -c 1 -T 7 -n 11 -d 0 -s 1 -g 1
+
+python3 extract_groups_from_clstr.py ~/Desktop/merging/cd-hit-est_attempt/merge_process_100/pan_gen_97_clstrd.fa.clstr
+python3 extract_groups_from_clstr.py ~/Desktop/merging/cd-hit-est_attempt/merge_process_100/pan_gen_108_clstrd.fa.clstr 
+
+python3 extract_groups_from_clstr.py ~/Desktop/merging/cd-hit-est_attempt/merge_process_100/pan_gen_97_108_clstrd.fa.clstr
+
+#intrafile merge, interfile merge, compile stats R scripts
+
+#compare to the clustered Roary pan_genome
+cd-hit-est -i pan_genome_reference.fa -o pan_gen_100_clstrd.fa -c 1 -T 7 -n 11 -d 0 -s 1 -g 1
+python3 extract_groups_from_clstr.py /home/nadege/Desktop/merging/cd-hit-est_attempt/merge_process_100/control/pan_gen_100_clstrd.fa.clstr
+
+#intrafile merge, compile stats R scripts
+
+#Do the same for the .99 run
+python3 extract_groups_from_clstr.py /home/nadege/Desktop/merging/cd-hit-est_attempt/merge_process_99/control/pan_gen_99_clstrd.fa.clstr
+
+#intrafile merge, compile stats R scripts
+
+
+#Trying chewBBACA
+python ~/chewBBACA/createschema/PPanGen.py -i ~/Desktop/chewBBACA/genome_list_108_97.txt -o ~/Desktop/chewBBACA/108_and_cpu --97 7
+
+
+
+>>> March 6, 2017
+
+#Get MIST running on kashyyyk again
+
+#move out the ones that are already completed 
+ls | xargs basename -a | cut -d. -f1 >completed_genomes.txt
+for file in $(cat ~/nadege/mist/completed_genomes.txt); do mv "$file.fasta" completed; done
+
+#then restart the process but don't hog all the threads
+tmux new -s nadege (CTRL+B then D to disconnect) (tmux attach -t nadege) (tmux kill-session -t nadege)
+parallel -j 50 program/mist-wrapper {} ::: genomes/*.fasta
+#Sucked up the RAM again... weird...
+
+#Going to run it on Dillon's computer
+#my wrapper:
+~/bin/mist_bin/MIST.exe -a $1 -t $2 -T /media/dbarker/cfia1/nadege_mist_temp_dir/ -b -j ~/nadege_mist/output/$(basename $3).json $3; rm -rf /media/dbarker/cfia1/nadege_mist_temp_dir/$(basename $3)*;
+
+parallel -j 20 ./mist ~/nadege_mist/needed_files/alleles/ ~/nadege_mist/needed_files/core.markers {} ::: /media/dbarker/cfia1/frontiers_paper/genomes/final/*.fasta
+#Wrapper not working...
+
+parallel -j 20 ~/bin/mist_bin/MIST.exe -a ~/nadege_mist/needed_files/alleles/ -t ~/nadege_mist/needed_files/core.markers -T /media/dbarker/cfia2/nadege_mist/temp_dir/ -b -j /media/dbarker/cfia2/nadege_mist/output/{/.}.json {} ::: /media/dbarker/cfia1/frontiers_paper/genomes/final/*.fasta
+#Also not working from my end... weird...
+
+#Make the MIST accessory files
+python3 build_acc_mist_files.py '/home/nadege/Desktop/merging/cd-hit-est_attempt/merge_process_100/control/pan_gen_100_clstrd.fa'
+
+#Try the accessory now... (On Dillon's computer) (Magically works somehow now...)
+parallel -j 20 ~/bin/mist_bin/MIST.exe -a ~/nadege_mist/needed_files/acc_alleles/ -t ~/nadege_mist/needed_files/acc.markers -T /media/dbarker/cfia2/nadege_mist/temp_dir/ -b -j /media/dbarker/cfia2/nadege_mist/acc_output/{/.}.json {} ::: /media/dbarker/cfia1/frontiers_paper/genomes/final/*.fasta
+
+#That'll take a while, so to have data to show Ed's collaborator do the heatmap stuff with a smaller set: 108 + 97
+#Gathered the core jsons into 108_and_97/core_jsons/
+python3 json2csv.py -j /home/nadege/Desktop/mist/108_and_97/core_jsons/ -o /home/nadege/Desktop/mist/108_and_97/core_json_out.csv -t core
+
+#Run the accessory
+parallel -j 7 MIST.exe -a ~/mist/needed_files/acc_alleles/ -t ~/mist/needed_files/acc.markers -T ~/Desktop/mist/108_and_97/temp_dir -b -j ~/Desktop/mist/108_and_97/acc_jsons/{/.}.json {} ::: ~/Desktop/genomes/campy_full_genomes/no_duplicates_plasmids/*.fasta  ~/Desktop/genomes/test_genomes/*.fasta
+
+#The input file I used to make the accessory files also contains core genes...
+#Make a multifasta that only contains accessory genes and remake those files
+python3 build_acc_mist_files.py '/home/nadege/Desktop/merging/cd-hit-est_attempt/merge_process_100/control/pan_gen_100_clstrd.fa' '/home/nadege/Desktop/mist/108_and_97/acc_gene_list.txt' 
+#^^^ or rather use a gene list while building it
+
+#Now run the accessory on both sets on both computers (transfer the files to Dillon's computer first though)
+#Same commands as before
+
+
+
+>>> March 7, 2017
+
+#Update core definitions
+python3 update_definitions.py -a ~/mist/needed_files/core_alleles/ -j ~/Desktop/mist/108_and_97/core_jsons/ -t core
+python3 update_definitions.py -a ~/mist/needed_files/acc_alleles/ -j ~/Desktop/mist/108_and_97/acc_jsons/ -t acc
+#^ error...
+
+
+wc -l acc.markers
+sort acc.markers | uniq | wc -l
+sort acc.markers | uniq -d
+
+#deleted duplicates in markers file (but there were duplicates because the input multifasta pangen had duplicate gene names)
+
+#instead, fixed things from the build script, re-ran it
+python3 build_acc_mist_files.py '/home/nadege/Desktop/merging/cd-hit-est_attempt/merge_process_100/control/pan_gen_100_clstrd.fa' '/home/nadege/Desktop/mist/108_and_97/acc_gene_list.txt' 
+
+#replaced old files with those and started running MIST again with those files (on both computers)
+
+#Ran update def.f after a fix (my computer 108+97)
+python3 update_definitions.py -a ~/mist/needed_files/acc_alleles/ -j ~/Desktop/mist/108_and_97/acc_jsons/ -t acc
+
+#Then run json2csv (my computer 108+97)
+python3 json2csv.py -j /home/nadege/Desktop/mist/108_and_97/core_jsons/ -o /home/nadege/Desktop/mist/108_and_97/core_json_out.csv -t core
+python3 json2csv.py -j /home/nadege/Desktop/mist/108_and_97/acc_jsons/ -o /home/nadege/Desktop/mist/108_and_97/acc_json_out.csv -t acc
+
+
+
+>>> March 8, 2017
+
+#Get the core jsons from Dillon's computer
+rsync dbarker@10.139.14.142:/media/dbarker/cfia1/frontiers_paper/core_analysis/original_jsons/* /home/nadege/Desktop/mist/big_set/core_jsons/
+
+#Cluster the big_set pan_gen to delete duplicates before using it as the binary accessory input for heatmaps and stuff
+cd-hit-est -i pan_genome_reference.fa -o pan_gen_clstrd.fa -c 1 -T 7 -n 11 -d 0 -s 1 -g 1
+
+python3 extract_groups_from_clstr.py ~/Desktop/mist/big_set/pan_gen_clstrd.fa.clstr
+
+#Prep core jsons data
+python3 update_definitions.py -a ~/mist/needed_files/core_alleles/ -j ~/Desktop/mist/big_set/core_jsons/ -t core
+python3 json2csv.py -j /home/nadege/Desktop/mist/big_set/core_jsons/ -o /home/nadege/Desktop/mist/big_set/core_json_out.csv -t core
+
+
+
+>>> March 9, 2017
+
+#Got the acc jsons, so prep them
+python3 update_definitions.py -a ~/mist/needed_files/acc_alleles/ -j ~/Desktop/mist/big_set/acc_jsons/ -t acc
+python3 json2csv.py -j /home/nadege/Desktop/mist/big_set/acc_jsons/ -o /home/nadege/Desktop/mist/big_set/acc_json_out.csv -t acc
+
+
+
+
+
+
+
+
+
+
+
+
+
+
