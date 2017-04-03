@@ -33,12 +33,12 @@ dist_bin_acc <- jaccard(as.matrix(bin_acc_genes))
 
 cluster_distances <- mclapply(clusts, cls.scatt.diss.mx, diss.mx= as.matrix(dist_bin_acc), mc.cores = 6)
 
-
+#"/home/dbarker/nadege/acc_clustering/acc_presence_absence_big_set.Rtab"
 #"/home/dbarker/nadege/acc_clustering/core_json_out.csv"
 #"/home/nadege/Desktop/mist/big_set/core_json_out.csv"
 core_genes <- read.table(file="/home/nadege/Desktop/mist/big_set/core_json_out.csv", row.names = 1, header=T, sep=",")
 colnames(core_genes) <- sub("X","", colnames(core_genes))
-core_genes[core_genes == 0] <- NA 
+
 
 
 #Merging the two distances to have something that takes into account number of shared loci AND allele similarity for those 
@@ -112,6 +112,8 @@ library(Matrix)
 library(ggdendro)
 library(gplots)
 library(RColorBrewer)
+
+# load(file = "/media/dbarker/cfia2/nadege/acc_clus_Rdat/.RData")
 
 #individual histograms to look at distributiuon of different distances
 dist_mat_2_dist_val <- function(dist_matrix)
@@ -209,14 +211,49 @@ allelic_core_acc_df <- data.frame("core" = unlist(as.list(tril(dist_core, k = -1
 core_comb_acc_df <- data.frame("core" = unlist(as.list(tril(dist_core, k = -1))), "combined_acc" = unlist(as.list(tril(comp_dist_acc, k = -1))),
                                   stringsAsFactors = F)
 
-ggplot(core_comb_acc_df, aes(x = core, y = combined_acc)) + 
-  geom_point(aes(x=core,y = combined_acc)) +
-  geom_smooth(method="lm") +
-  ggtitle("Corelation Between Allelic Core and Combined Accessory Distance")+
-  xlab("Allelic Core Distance") +
-  ylab("Combined Accessory Distance")
-ggsave(file = "allelic_core_combined_acc_dist_scatterplot_line.png",path = "/home/dbarker/nadege/acc_clustering")
+core_bin_acc_df <- data.frame("core" = unlist(as.list(tril(dist_core, k = -1))), "bin_acc" = unlist(as.list(tril(dist_bin_acc, k = -1))),
+                               stringsAsFactors = F)
 
+ggplot(core_bin_acc_df, aes(x = core, y = bin_acc)) + 
+  geom_point(aes(x=core,y = bin_acc)) +
+  geom_smooth(method="lm") +
+  ggtitle("Corelation Between Allelic Core and Binary Accessory Distance")+
+  xlab("Allelic Core Distance") +
+  ylab("Binary Accessory Distance")
+ggsave(file = "allelic_core_bin_acc_dist_scatterplot_line.png",path = "/home/dbarker/nadege/acc_clustering")
+
+
+draw_dist_vs_dist_scatt(dist_core, dist_bin_acc, "core", "bin_acc", "Allelic Core", "Binary Accessory",
+                        "allelic_core_bin_acc_dist_scatterplot_line.png,", "/home/dbarker/nadege/acc_clustering")
+
+
+draw_dist_vs_dist_scatt <- function(dist1, dist2, label1, label2, title1, title2, outfile, outpath, percent = T)
+{
+  list1 <- dist_mat_2_dist_val(dist1)
+  list2 <- dist_mat_2_dist_val(dist2)
+  
+  if (percent)
+  {
+    list1 <- list1/max(list1)
+    list2 <- list2/max(list2)
+  }
+  
+  dist_df <- data.frame(label1 = list1, label2 = list2, stringsAsFactors = F)
+  
+   g <- ggplot(dist_df, aes(x = label1, y = label2)) + 
+    geom_point(aes(x=label1, y = label2)) +
+    geom_smooth(method="lm") +
+    ggtitle(paste0("Corelation Between ", title1 ," and ", title2, " Distance")) +
+    xlab(paste0(title1," Distance")) +
+    ylab(paste0(title2, " Distance"))
+  
+   if (percent)
+   {
+     g + expand_limits(x = c(0,1), y = c(0,1))
+   }
+   
+  ggsave(plot = g, file = outfile, path = outpath)
+}
 
 
 #Heatmaps (all dists onto core clustering)
@@ -296,7 +333,7 @@ dist_histogram(clusters_combined_distances[[45]]$intercls.single[1000,], 0, 1.6,
 
 #min(intercls[intercls[,cluster] > 0, cluster])
 #make a list of the smallest non-zero values by column
-non_zero_min <- function(matrix)
+non_zero_col_min <- function(matrix)
 {
   tmp <- list()
   for (i in 1:ncol(matrix))
@@ -381,7 +418,7 @@ heights <- c(1,45,seq(25,430,25),430)
 for (i in heights)
 {
   filename = paste0("h_",i)
-  draw_plot(plot_func = inter_intra_ratio_histogram_at_h,
+  draw_plot(plot_func = intra_inter_scatter_at_h,
             clusters = core_clusters, 
             cluster_distances = clusters_combined_distances, 
             height = i, 
