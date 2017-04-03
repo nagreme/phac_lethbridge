@@ -118,8 +118,9 @@ library(RColorBrewer)
 #individual histograms to look at distributiuon of different distances
 dist_mat_2_dist_val <- function(dist_matrix)
 {
-  dist_values <- unlist(as.list(tril(dist_matrix, k = -1)))
-  dist_values[dist_values == 0] <- NA
+  # dist_values <- unlist(as.list(tril(dist_matrix, k = -1)))
+  dist_matrix[lower.tri(dist_matrix, diag = T)] <- NA
+  dist_values <- dist_matrix[-which(is.na(dist_matrix))]
 }
 
 dist_histogram <- function(dist_values, min, max, bin_width, break_width, out_file, out_path)
@@ -227,21 +228,15 @@ draw_dist_vs_dist_scatt(dist_core, dist_bin_acc, "core", "bin_acc", "Allelic Cor
                         "allelic_core_bin_acc_dist_scatterplot_line.png,", "/home/dbarker/nadege/acc_clustering")
 
 
-draw_dist_vs_dist_scatt <- function(dist1, dist2, label1, label2, title1, title2, outfile, outpath, percent = T)
+draw_dist_vs_dist_scatt <- function(dist1, dist2, title1, title2, outfile, outpath, percent = T)
 {
   list1 <- dist_mat_2_dist_val(dist1)
   list2 <- dist_mat_2_dist_val(dist2)
   
-  if (percent)
-  {
-    list1 <- list1/max(list1)
-    list2 <- list2/max(list2)
-  }
-  
   dist_df <- data.frame(label1 = list1, label2 = list2, stringsAsFactors = F)
-  
+
    g <- ggplot(dist_df, aes(x = label1, y = label2)) + 
-    geom_point(aes(x=label1, y = label2)) +
+    geom_point() +
     geom_smooth(method="lm") +
     ggtitle(paste0("Corelation Between ", title1 ," and ", title2, " Distance")) +
     xlab(paste0(title1," Distance")) +
@@ -249,7 +244,9 @@ draw_dist_vs_dist_scatt <- function(dist1, dist2, label1, label2, title1, title2
   
    if (percent)
    {
-     g + expand_limits(x = c(0,1), y = c(0,1))
+     g + scale_x_continuous(labels = percent) +
+       scale_y_continuous(labels = percent) +
+       expand_limits(x=c(0,1), y=c(0,1))
    }
    
   ggsave(plot = g, file = outfile, path = outpath)
