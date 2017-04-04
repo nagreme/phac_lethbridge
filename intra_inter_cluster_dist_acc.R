@@ -225,8 +225,7 @@ ggsave(file = "allelic_core_bin_acc_dist_scatterplot_line.png",path = "/home/dba
 
 
 draw_dist_vs_dist_scatt(dist_core, dist_bin_acc, "Allelic Core", "Binary Accessory",
-                        "allelic_core_bin_acc_dist_scatterplot_line.png,", "/home/dbarker/nadege/acc_clustering",
-                        percent = TRUE)
+                        "allelic_core_bin_acc_dist_scatterplot_line.png", "/home/dbarker/nadege/acc_clustering/")
 
 
 draw_dist_vs_dist_scatt <- function(dist1, dist2, title1, title2, outfile, outpath, percent = T)
@@ -242,8 +241,6 @@ draw_dist_vs_dist_scatt <- function(dist1, dist2, title1, title2, outfile, outpa
   
   dist_df <- data.frame(label1 = list1, label2 = list2, stringsAsFactors = F)
   
-  print(head(dist_df))
-
   g <- ggplot(dist_df, aes(x = label1, y = label2)) + 
     geom_point() +
     geom_smooth(method="lm") +
@@ -253,12 +250,10 @@ draw_dist_vs_dist_scatt <- function(dist1, dist2, title1, title2, outfile, outpa
   
    if (percent)
    {
-     g + scale_x_continuous(labels = percent) +
-       scale_y_continuous(labels = percent) +
-       xlim(0,1) + ylim(0,1)
+     g <- g + xlim(0,1) + ylim(0,1)
    }
-   
-  ggsave(plot = g, file = outfile, path = outpath)
+
+  ggsave(plot = g, filename = outfile, path = outpath)
 }
 
 
