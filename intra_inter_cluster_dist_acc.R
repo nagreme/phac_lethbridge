@@ -224,8 +224,9 @@ ggplot(core_bin_acc_df, aes(x = core, y = bin_acc)) +
 ggsave(file = "allelic_core_bin_acc_dist_scatterplot_line.png",path = "/home/dbarker/nadege/acc_clustering")
 
 
-draw_dist_vs_dist_scatt(dist_core, dist_bin_acc, "core", "bin_acc", "Allelic Core", "Binary Accessory",
-                        "allelic_core_bin_acc_dist_scatterplot_line.png,", "/home/dbarker/nadege/acc_clustering")
+draw_dist_vs_dist_scatt(dist_core, dist_bin_acc, "Allelic Core", "Binary Accessory",
+                        "allelic_core_bin_acc_dist_scatterplot_line.png,", "/home/dbarker/nadege/acc_clustering",
+                        percent = TRUE)
 
 
 draw_dist_vs_dist_scatt <- function(dist1, dist2, title1, title2, outfile, outpath, percent = T)
@@ -233,9 +234,17 @@ draw_dist_vs_dist_scatt <- function(dist1, dist2, title1, title2, outfile, outpa
   list1 <- dist_mat_2_dist_val(dist1)
   list2 <- dist_mat_2_dist_val(dist2)
   
+  if (percent)
+  {
+    list1 <- list1/max(list1)
+    list2 <- list2/max(list2)
+  }
+  
   dist_df <- data.frame(label1 = list1, label2 = list2, stringsAsFactors = F)
+  
+  print(head(dist_df))
 
-   g <- ggplot(dist_df, aes(x = label1, y = label2)) + 
+  g <- ggplot(dist_df, aes(x = label1, y = label2)) + 
     geom_point() +
     geom_smooth(method="lm") +
     ggtitle(paste0("Corelation Between ", title1 ," and ", title2, " Distance")) +
@@ -246,7 +255,7 @@ draw_dist_vs_dist_scatt <- function(dist1, dist2, title1, title2, outfile, outpa
    {
      g + scale_x_continuous(labels = percent) +
        scale_y_continuous(labels = percent) +
-       expand_limits(x=c(0,1), y=c(0,1))
+       xlim(0,1) + ylim(0,1)
    }
    
   ggsave(plot = g, file = outfile, path = outpath)
