@@ -287,8 +287,8 @@ cg_dendro <- hclust(as.dist(dist_core), method = "single") %>% as.dendrogram()
 #brewer.pal(6,"Set3")
 #c(0, 0.25, 0.53, 0.65, 0.78, 0.92, 1)
 #dist_acc_df
-# colour_dist_histogram(dist_values_df = dist_acc_df, min = 0, max = max(dist_acc_df$distance), 
-#                       bin_width = 0.01, break_width = 0.1, 
+# colour_dist_histogram(dist_values_df = dist_acc_df, min = 0, max = max(dist_acc_df$distance),
+#                       bin_width = 0.01, break_width = 0.1,
 #                       colours = brewer.pal(6,"Set3"),
 #                       col_breaks = c(0, 0.25, 0.53, 0.65, 0.78, 0.92, round(max(dist_acc_df$distance)+0.005, digits = 2)),
 #                       out_file = "acc_dist_coloured_histogram.png",
@@ -298,16 +298,36 @@ cg_dendro <- hclust(as.dist(dist_core), method = "single") %>% as.dendrogram()
 #brewer.pal(5,"Set3")
 #c(0, 0.2, 0.35, 0.5, 0.67, 0.8)
 #dist_bin_acc_df
+# colour_dist_histogram(dist_values_df = dist_bin_acc_df, min = 0, max = max(dist_bin_acc_df$distance),
+#                       bin_width = 0.01, break_width = 0.1,
+#                       colours = brewer.pal(5,"Set3"),
+#                       col_breaks = c(0, 0.2, 0.35, 0.5, 0.67, round(max(dist_bin_acc_df$distance)+0.005, digits = 2)),
+#                       out_file = "bin_acc_dist_coloured_histogram.png",
+#                       out_path = "/home/dbarker/nadege/acc_clustering/")
 
 #comp_dist_acc
 #c("#8DD3C7", "#FFFFB3", "#BEBADA", "#B3DE69", "#80B1D3", "#FDB462", "#FB8072")
 #c(0, 0.3, 0.61, 0.75, 0.9, 1.06, 1.18, 1.3)
 #dist_comb_acc_df
+# colour_dist_histogram(dist_values_df = dist_comb_acc_df, min = 0, max = max(dist_comb_acc_df$distance),
+#                       bin_width = 0.01, break_width = 0.1,
+#                       colours = c("#8DD3C7", "#FFFFB3", "#BEBADA", "#B3DE69", "#80B1D3", "#FDB462", "#FB8072"),
+#                       col_breaks = c(0, 0.3, 0.61, 0.75, 0.9, 1.06, 1.18, round(max(dist_comb_acc_df$distance)+0.005, digits = 2)),
+#                       out_file = "comp_acc_dist_coloured_histogram.png",
+#                       out_path = "/home/dbarker/nadege/acc_clustering/")
+
 
 #allelic_dist
 #brewer.pal(6,"Set3")
 #c(0, 0.3, 0.7, 0.87, 1.13, 1.31, 1.42)
 #dist_allelic_df
+# colour_dist_histogram(dist_values_df = dist_allelic_df, min = 0, max = max(dist_allelic_df$distance),
+#                       bin_width = 0.01, break_width = 0.1,
+#                       colours = brewer.pal(6,"Set3"),
+#                       col_breaks = c(0, 0.3, 0.7, 0.87, 1.13, 1.31, round(max(dist_allelic_df$distance)+0.005, digits = 2)),
+#                       out_file = "allelic_dist_coloured_histogram.png",
+#                       out_path = "/home/dbarker/nadege/acc_clustering/")
+
 
 draw_heatmap(allelic_dist, 
              "/home/dbarker/nadege/acc_clustering/coloured_select_allelic_dist_heatmap.png",
@@ -327,11 +347,11 @@ draw_heatmap <- function(dist_matrix, filename, title, max, colours, col_breaks)
   dev.off()
 }
 
-colour_dist_histogram(dist_values_df = dist_combined_df, min = 0, max = max(dist_combined_df$distance),
+colour_dist_histogram(dist_values_df = dist_core_df, min = 0, max = max(dist_core_df$distance),
                       bin_width = 0.01, break_width = 0.1,
-                      colours = c("#8DD3C7", "#FFFFB3", "#BEBADA", "#B3DE69", "#80B1D3", "#FDB462", "#FB8072"),
-                      col_breaks = c(0, 0.35, 0.8, 0.95, 1.2, 1.4, 1.55, round(max(dist_combined_df$distance)+0.005, digits = 2)),
-                      out_file = "combined_dist_coloured_histogram.png",
+                      colours = brewer.pal(6,"Set3"),
+                      col_breaks = c(0, 0.2, 0.45, 0.57, 0.77, 0.92, round(max(dist_core_df$distance)+0.005, digits = 2)),
+                      out_file = "core_dist_coloured_histogram.png",
                       out_path = "/home/dbarker/nadege/acc_clustering/")
 
 #coloured_histograms
@@ -340,39 +360,22 @@ colour_dist_histogram(dist_values_df = dist_combined_df, min = 0, max = max(dist
 # 1 1.3679782 combined_all
 # 2 1.3793407 combined_all
 # 3 1.0883384 combined_all
-colour_dist_histogram <- function(dist_values_df, min, max, bin_width, break_width, colours, col_breaks, out_file, out_path)
+colour_dist_histogram <- function(dist_values_df, min, max, bin_width, break_width, 
+                                  colours, col_breaks, out_file, out_path)
 {
   # dist_values_df$group <- cut(dist_values_df$distance, breaks = col_breaks, right = FALSE)
-  
-  
-  #This isn't the greatest way to apply colour but it'll do for now
-  col_seq <- c()
-  col_seq <- c(col_seq, colours[1])
-  
-  for (i in c(1:length(colours)))
-  {
-    col_seq <- c(col_seq, rep(colours[i], col_breaks[i+1]/bin_width - col_breaks[i]/bin_width))
-  }
-  
-  if (length(col_seq) <= length(seq(from = min, to = max, by = 0.01)))
-  {
-    col_seq <- c(colours[1], col_seq)
-  }
-  
-  else if(length(col_seq) > length(seq(from = min, to = max, by = 0.01)) + 1)
-  {
-    col_seq <- col_seq[-length(col_seq)]
-  }
-  #I am so sorry, that was a mess
-  
-  # print(length(col_seq))
-  
-  ggplot(dist_values_df, aes(distance)) + 
-    geom_histogram(binwidth = bin_width, fill = col_seq) + #color = dist_values_df$group) +
+
+  g <- ggplot(dist_values_df, aes(distance)) + 
+    geom_histogram(binwidth = bin_width, fill = "white", colour = "black") + 
     scale_x_continuous(limit = c(min,max), breaks = c(seq(from = min, to = max, by = break_width))) 
-  # scale_fill_manual(breaks=levels(dist_values_df$group), values=colours)
   
-  ggsave(file = out_file, path = out_path)
+  for (i in c(1:length(col_breaks)-1))
+  {
+    g <- g + geom_histogram(data = subset(dist_values_df, distance > col_breaks[i] & distance < col_breaks[i+1]), 
+                            binwidth = bin_width, fill = colours[i])
+  }
+
+  ggsave(plot = g, file = out_file, path = out_path)
 }
 
 
