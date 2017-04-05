@@ -318,12 +318,12 @@ dist_histogram(clusters_combined_distances[[45]]$intercls.single[1000,], 0, 1.6,
 
 
 
-#histograms of intercluster distribution for a given cluster at a given height
+#histograms of intercluster distribution at given height
 dist_histogram_at_h <- function(dist_values, min, max, bin_width, break_width, out_file, out_path, h)
 {
   ggplot(as.data.frame(dist_values), aes(dist_values)) + geom_histogram(binwidth = bin_width)+
     scale_x_continuous(limit = c(min,max), breaks = c(seq(from = min, to = max, by = break_width))) +
-    labs(title = paste0("Intercluster Distances at Height ", h),
+    labs(title = paste0("Intercluster Distances at ", h),
          subtitle = paste0("Standard Deviation = ", round(sd(dist_values), digits = 4), 
                            "     Min = ", round(min(dist_values), digits = 4),
                            "     Mean = ", round(mean(dist_values), digits = 4),
@@ -334,18 +334,47 @@ dist_histogram_at_h <- function(dist_values, min, max, bin_width, break_width, o
   ggsave(file = out_file, path = out_path)
 }
 
-intercls_single_combined_dists <- dist_mat_2_dist_val(clusters_combined_distances[[45]]$intercls.single)
+#All intercluster distances at given height (all heights)
+for (i in c(1:length(clusters_combined_distances)))
+{
+  intercls_single_combined_dists <- dist_mat_2_dist_val(clusters_combined_distances[[i]]$intercls.single)
+  
+  height <- colnames(core_clusters)[i]
 
-#histograms of all intercls distance at a given height plus standard dev.
-dist_histogram_at_h(dist_values = intercls_single_combined_dists, 
-               min = 0, max = max(intercls_single_combined_dists), 
-               bin_width = 0.01, 
-               break_width = 0.1,
-               out_file = "h_45_intercls_single_combined_dist_histogram.png", 
-               out_path = "/home/dbarker/nadege/acc_clustering",
-               h = 45)
+  #histograms of all intercls distance at a given height plus standard dev.
+  dist_histogram_at_h(dist_values = intercls_single_combined_dists, 
+                 min = 0, max = max(intercls_single_combined_dists), 
+                 bin_width = 0.01, 
+                 break_width = 0.1,
+                 out_file = paste0(height,"_intercls_single_combined_dist_histogram.png"), 
+                 out_path = "/home/dbarker/nadege/acc_clustering",
+                 h = height)
+}
 
 
+#All intercluster distances at given height and given cluster
+# for (h in c(1:length(clusters_combined_distances)))
+for (h in c(1:5))
+{
+  height <- colnames(core_clusters)[h]
+  
+  clusts_at_percent <- 0.2
+  
+  for (cls in seq(1, length(unique(core_clusters[,h])), length(unique(core_clusters[,h]))*clusts_at_percent))
+  {
+    cls <- as.integer(cls)
+    intercls_single_combined_dists <- clusters_combined_distances[[h]]$intercls.single[cls,]
+    
+    #histograms of all intercls distance at a given height plus standard dev.
+    dist_histogram_at_h(dist_values = intercls_single_combined_dists, 
+                        min = 0, max = max(intercls_single_combined_dists), 
+                        bin_width = 0.01, 
+                        break_width = 0.1,
+                        out_file = paste0(height,"_cls_",cls,"_intercls_single_combined_dist_histogram.png"), 
+                        out_path = "/home/dbarker/nadege/acc_clustering",
+                        h = paste0(height,"_cls_",cls))
+  }
+}
 
 
 
