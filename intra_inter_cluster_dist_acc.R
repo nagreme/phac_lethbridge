@@ -123,14 +123,6 @@ dist_mat_2_dist_val <- function(dist_matrix)
   dist_values <- dist_matrix[-which(is.na(dist_matrix))]
 }
 
-dist_histogram <- function(dist_values, min, max, bin_width, break_width, out_file, out_path)
-{
-  ggplot(na.omit(as.data.frame(dist_values)),aes(dist_values)) + geom_histogram(binwidth = bin_width)+
-    scale_x_continuous(limit = c(min,max), breaks = c(seq(from = min, to = max, by = break_width))) +
-    annotate("text", x = max*0.2, y = max(dist_values)*0.85, label = paste0("st.dev = ",sd(dist_values)))
-  ggsave(file = out_file, path = out_path)
-}
-
 
 dist_bin_acc_values <- dist_mat_2_dist_val(dist_bin_acc)
 dist_histogram(dist_bin_acc_values, 0, 1, 0.01, 0.1, "bin_acc_dist_histogram.png", "/home/dbarker/nadege/acc_clustering")
@@ -207,26 +199,26 @@ ggsave(file = "all_dist_histograms_0.25.png",path = "/home/dbarker/nadege/acc_cl
 # core_sim_values <- 1 - unlist(as.list(tril(dist_core, k = -1)))
 # acc_sim_values <- 1 - unlist(as.list(tril(dist_acc, k = -1)))
 
-allelic_core_acc_df <- data.frame("core" = unlist(as.list(tril(dist_core, k = -1))), "acc" = unlist(as.list(tril(dist_acc, k = -1))),
-                                  stringsAsFactors = F)
+# allelic_core_acc_df <- data.frame("core" = unlist(as.list(tril(dist_core, k = -1))), "acc" = unlist(as.list(tril(dist_acc, k = -1))),
+#                                   stringsAsFactors = F)
+# 
+# core_comb_acc_df <- data.frame("core" = unlist(as.list(tril(dist_core, k = -1))), "combined_acc" = unlist(as.list(tril(comp_dist_acc, k = -1))),
+#                                   stringsAsFactors = F)
+# 
+# core_bin_acc_df <- data.frame("core" = unlist(as.list(tril(dist_core, k = -1))), "bin_acc" = unlist(as.list(tril(dist_bin_acc, k = -1))),
+#                                stringsAsFactors = F)
+# 
+# ggplot(core_bin_acc_df, aes(x = core, y = bin_acc)) + 
+#   geom_point(aes(x=core,y = bin_acc)) +
+#   geom_smooth(method="lm") +
+#   ggtitle("Corelation Between Allelic Core and Binary Accessory Distance")+
+#   xlab("Allelic Core Distance") +
+#   ylab("Binary Accessory Distance")
+# ggsave(file = "allelic_core_bin_acc_dist_scatterplot_line.png",path = "/home/dbarker/nadege/acc_clustering")
 
-core_comb_acc_df <- data.frame("core" = unlist(as.list(tril(dist_core, k = -1))), "combined_acc" = unlist(as.list(tril(comp_dist_acc, k = -1))),
-                                  stringsAsFactors = F)
 
-core_bin_acc_df <- data.frame("core" = unlist(as.list(tril(dist_core, k = -1))), "bin_acc" = unlist(as.list(tril(dist_bin_acc, k = -1))),
-                               stringsAsFactors = F)
-
-ggplot(core_bin_acc_df, aes(x = core, y = bin_acc)) + 
-  geom_point(aes(x=core,y = bin_acc)) +
-  geom_smooth(method="lm") +
-  ggtitle("Corelation Between Allelic Core and Binary Accessory Distance")+
-  xlab("Allelic Core Distance") +
-  ylab("Binary Accessory Distance")
-ggsave(file = "allelic_core_bin_acc_dist_scatterplot_line.png",path = "/home/dbarker/nadege/acc_clustering")
-
-
-draw_dist_vs_dist_scatt(dist_core, dist_bin_acc, "Allelic Core", "Binary Accessory",
-                        "allelic_core_bin_acc_dist_scatterplot_line.png", "/home/dbarker/nadege/acc_clustering/")
+draw_dist_vs_dist_scatt(dist_core, comp_dist_acc, "Allelic Core", "Combined Accessory",
+                        "allelic_core_combined_acc_dist_scatterplot_line_percent_scaled.png", "/home/dbarker/nadege/acc_clustering/")
 
 
 draw_dist_vs_dist_scatt <- function(dist1, dist2, title1, title2, outfile, outpath, percent = T)
@@ -266,17 +258,126 @@ return_same <- function(x)
 
 cg_dendro <- hclust(as.dist(dist_core), method = "single") %>% as.dendrogram()
 
+
+#combined dist
+#brewer.pal(7,"Set3")
+#c(0, 0.35, 0.8, 0.95, 1.2, 1.4, 1.55, 1.7)
+#Set 3 with red and green swapped
+#c("#8DD3C7", "#FFFFB3", "#BEBADA", "#B3DE69", "#80B1D3", "#FDB462", "#FB8072")
+#dist_combined_df
+# colour_dist_histogram(dist_values_df = dist_combined_df, min = 0, max = max(dist_combined_df$distance),
+#                       bin_width = 0.01, break_width = 0.1,
+#                       colours = c("#8DD3C7", "#FFFFB3", "#BEBADA", "#B3DE69", "#80B1D3", "#FDB462", "#FB8072"),
+#                       col_breaks = c(0, 0.35, 0.8, 0.95, 1.2, 1.4, 1.55, round(max(dist_combined_df$distance)+0.005, digits = 2)),
+#                       out_file = "combined_dist_coloured_histogram.png",
+#                       out_path = "/home/dbarker/nadege/acc_clustering/")
+
+#dist_core
+#brewer.pal(6,"Set3")
+#c(0, 0.2, 0.45, 0.57, 0.77, 0.92, 1)
+#dist_core_df
+# colour_dist_histogram(dist_values_df = dist_core_df, min = 0, max = max(dist_core_df$distance),
+#                       bin_width = 0.01, break_width = 0.1,
+#                       colours = brewer.pal(6,"Set3"),
+#                       col_breaks = c(0, 0.2, 0.45, 0.57, 0.77, 0.92, round(max(dist_core_df$distance)+0.005, digits = 2)),
+#                       out_file = "core_dist_coloured_histogram.png",
+#                       out_path = "/home/dbarker/nadege/acc_clustering/")
+
+#dist_acc
+#brewer.pal(6,"Set3")
+#c(0, 0.25, 0.53, 0.65, 0.78, 0.92, 1)
+#dist_acc_df
+# colour_dist_histogram(dist_values_df = dist_acc_df, min = 0, max = max(dist_acc_df$distance),
+#                       bin_width = 0.01, break_width = 0.1,
+#                       colours = brewer.pal(6,"Set3"),
+#                       col_breaks = c(0, 0.25, 0.53, 0.65, 0.78, 0.92, round(max(dist_acc_df$distance)+0.005, digits = 2)),
+#                       out_file = "acc_dist_coloured_histogram.png",
+#                       out_path = "/home/dbarker/nadege/acc_clustering/")
+
+#dist_bin_acc
+#brewer.pal(5,"Set3")
+#c(0, 0.2, 0.35, 0.5, 0.67, 0.8)
+#dist_bin_acc_df
+# colour_dist_histogram(dist_values_df = dist_bin_acc_df, min = 0, max = max(dist_bin_acc_df$distance),
+#                       bin_width = 0.01, break_width = 0.1,
+#                       colours = brewer.pal(5,"Set3"),
+#                       col_breaks = c(0, 0.2, 0.35, 0.5, 0.67, round(max(dist_bin_acc_df$distance)+0.005, digits = 2)),
+#                       out_file = "bin_acc_dist_coloured_histogram.png",
+#                       out_path = "/home/dbarker/nadege/acc_clustering/")
+
+#comp_dist_acc
+#c("#8DD3C7", "#FFFFB3", "#BEBADA", "#B3DE69", "#80B1D3", "#FDB462", "#FB8072")
+#c(0, 0.3, 0.61, 0.75, 0.9, 1.06, 1.18, 1.3)
+#dist_comb_acc_df
+# colour_dist_histogram(dist_values_df = dist_comb_acc_df, min = 0, max = max(dist_comb_acc_df$distance),
+#                       bin_width = 0.01, break_width = 0.1,
+#                       colours = c("#8DD3C7", "#FFFFB3", "#BEBADA", "#B3DE69", "#80B1D3", "#FDB462", "#FB8072"),
+#                       col_breaks = c(0, 0.3, 0.61, 0.75, 0.9, 1.06, 1.18, round(max(dist_comb_acc_df$distance)+0.005, digits = 2)),
+#                       out_file = "comp_acc_dist_coloured_histogram.png",
+#                       out_path = "/home/dbarker/nadege/acc_clustering/")
+
+
+#allelic_dist
+#brewer.pal(6,"Set3")
+#c(0, 0.3, 0.7, 0.87, 1.13, 1.31, 1.42)
+#dist_allelic_df
+# colour_dist_histogram(dist_values_df = dist_allelic_df, min = 0, max = max(dist_allelic_df$distance),
+#                       bin_width = 0.01, break_width = 0.1,
+#                       colours = brewer.pal(6,"Set3"),
+#                       col_breaks = c(0, 0.3, 0.7, 0.87, 1.13, 1.31, round(max(dist_allelic_df$distance)+0.005, digits = 2)),
+#                       out_file = "allelic_dist_coloured_histogram.png",
+#                       out_path = "/home/dbarker/nadege/acc_clustering/")
+
+
+draw_heatmap(allelic_dist, 
+             "/home/dbarker/nadege/acc_clustering/coloured_select_allelic_dist_heatmap.png",
+             "Combined", 0, colours = brewer.pal(6,"Set3"), 
+             col_breaks = c(0, 0.3, 0.7, 0.87, 1.13, 1.31, 1.42))
+
+
 #ggdendrogram(cg_dendro)
-draw_heatmap <- function(dist_matrix, filename, title, max)
+draw_heatmap <- function(dist_matrix, filename, title, max, colours, col_breaks)
 {
   png(filename = filename, width=12, height=12, units="in", res = 450)
   dist_matrix[1,1] <- max
   heatmap.2(as.matrix(dist_matrix),Rowv = cg_dendro, Colv = "Rowv", distfun=return_same, dendrogram = "both", symm = T,
-            trace = "none", col = brewer.pal(9,"PuBu"), main = paste0(title," Distance Matrix Clustered by Core"),
+            trace = "none", col = colours, breaks = col_breaks, main = paste0(title," Distance Matrix Clustered by Core"),
             key.title = "Distance Distribution", key.xlab = paste0(title, " Distance"))
   dist_bin_acc[1,1] <- 0
   dev.off()
 }
+
+colour_dist_histogram(dist_values_df = dist_core_df, min = 0, max = max(dist_core_df$distance),
+                      bin_width = 0.01, break_width = 0.1,
+                      colours = brewer.pal(6,"Set3"),
+                      col_breaks = c(0, 0.2, 0.45, 0.57, 0.77, 0.92, round(max(dist_core_df$distance)+0.005, digits = 2)),
+                      out_file = "core_dist_coloured_histogram.png",
+                      out_path = "/home/dbarker/nadege/acc_clustering/")
+
+#coloured_histograms
+#requires a dist_value_df of this format:
+# distance        label
+# 1 1.3679782 combined_all
+# 2 1.3793407 combined_all
+# 3 1.0883384 combined_all
+colour_dist_histogram <- function(dist_values_df, min, max, bin_width, break_width, 
+                                  colours, col_breaks, out_file, out_path)
+{
+  # dist_values_df$group <- cut(dist_values_df$distance, breaks = col_breaks, right = FALSE)
+
+  g <- ggplot(dist_values_df, aes(distance)) + 
+    geom_histogram(binwidth = bin_width, fill = "white", colour = "black") + 
+    scale_x_continuous(limit = c(min,max), breaks = c(seq(from = min, to = max, by = break_width))) 
+  
+  for (i in c(1:length(col_breaks)-1))
+  {
+    g <- g + geom_histogram(data = subset(dist_values_df, distance > col_breaks[i] & distance < col_breaks[i+1]), 
+                            binwidth = bin_width, fill = colours[i])
+  }
+
+  ggsave(plot = g, file = out_file, path = out_path)
+}
+
 
 #subset heatmaps
 # subset_dist <- combined_dist
@@ -313,7 +414,6 @@ clusters_combined_distances <- mclapply(core_clusters, cls.scatt.diss.mx, diss.m
 
 dist_histogram(clusters_combined_distances[[45]]$intercls.single[1000,], 0, 1.6, 0.01, 0.1, 
                "h_45_cls_1000_intercls_single_combined_dist_histogram.png", "/home/dbarker/nadege/acc_clustering")
-
 
 
 
@@ -421,6 +521,15 @@ draw_scatt <- function(df, xlb, ylb, xmax, ymax, heading, out_file, out_path)
 #   scale_size_area()
 # ggsave(file = paste0(savefile,"_avg_intra_vs_sing_inter_combined_dist_scatterplot.png") ,path = savepath)
 #   
+
+
+dist_histogram <- function(dist_values, min, max, bin_width, break_width, out_file, out_path)
+{
+  ggplot(na.omit(as.data.frame(dist_values)),aes(dist_values)) + geom_histogram(binwidth = bin_width)+
+    scale_x_continuous(limit = c(min,max), breaks = c(seq(from = min, to = max, by = break_width)))
+  ggsave(file = out_file, path = out_path)
+}
+
 
 
 # draw_plot(plot_func = intra_inter_scatter_at_h,
