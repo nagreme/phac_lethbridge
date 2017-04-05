@@ -378,6 +378,51 @@ for (h in c(1:5))
 
 
 
+#Scatterplot of height & cls # vs. standard deviations of intercls distances 
+for (h in c(1:length(clusters_combined_distances)))
+# for (h in c(1, 45, 230, 400))
+{
+  height <- colnames(core_clusters)[h]
+   
+  df <- data.frame(x = sapply(sort(unique(core_clusters[,h])), function(x) sum(core_clusters[,h] == x)), 
+                   y = apply(clusters_combined_distances[[h]]$intercls.single, 1, sd))
+  draw_scatt(df, 
+             xlb = "Cluster Size",
+             ylb = "Std Dev. of Intercluster Distances",
+             xmax = 5300,
+             ymax = 1.2,
+             heading = paste0("Correlation Btw Cluster Size and Intercls Distance Std. Dev at ", height),
+             out_file = paste0(height,"cls_size_vs_intercls_dist_scatterplot.png"),
+             out_path = "/home/dbarker/nadege/acc_clustering")
+}
+
+
+draw_scatt <- function(df, xlb, ylb, xmax, ymax, heading, out_file, out_path)
+{
+  ggplot(df, aes(df$x, df$y)) +
+    geom_point(shape = 21, colour = "black", fill = "white", alpha = 0.6) +
+    labs(title = heading,
+         x = xlb,
+         y = ylb)+
+    expand_limits(x = c(0, xmax), y = c(0, ymax))
+  
+  ggsave(file = out_file, path = out_path)
+}
+
+
+# 
+#   ggplot(df, aes((intracls_average), unlist(intercls_single))) +
+#   geom_point(aes(size = cluster_sizes), shape = 21, colour = "black", fill = "white", alpha = 1/2) +
+#   ggtitle(paste0("Intra vs Inter Distances (Combined Core and Accessory) at Height ", h))+
+#   xlab("Average Intracluster Distance") +
+#   ylab("Minimum Single Linkage Interclsuter Distance")+
+#   scale_y_continuous(limits = c(0,1.6)) +
+#   scale_x_continuous(limits = c(0,0.7)) +
+#   scale_size_area()
+# ggsave(file = paste0(savefile,"_avg_intra_vs_sing_inter_combined_dist_scatterplot.png") ,path = savepath)
+#   
+
+
 # draw_plot(plot_func = intra_inter_scatter_at_h,
 #           clusters = core_clusters, 
 #           cluster_distances = clusters_combined_distances, 
