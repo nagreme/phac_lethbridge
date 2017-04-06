@@ -409,6 +409,7 @@ draw_heatmap(subset_dist, "/home/dbarker/nadege/acc_clustering/select_bin_acc_di
 #h_45_cluster_distances <- cls.scatt.diss.mx(diss.mx= as.matrix(___), h_45_clusters)
 
 clusters_combined_distances <- mclapply(core_clusters, cls.scatt.diss.mx, diss.mx= as.matrix(combined_dist), mc.cores = 12)
+clusters_bin_acc_distances <- mclapply(core_clusters, cls.scatt.diss.mx, diss.mx= as.matrix(dist_bin_acc), mc.cores = 12)
 
 #clusters_combined_distances[[height_index]]$int__cls.method[cluster_number]
 
@@ -556,10 +557,10 @@ non_zero_col_min <- function(matrix)
 #Density plots of intra and inter cluster distances at a given height
 
 #Plot function wrapper
-draw_plot <- function(plot_func, clusters, cluster_distances, height, savefile, savepath)
+draw_plot <- function(plot_func, clusters, cluster_distances, height, savepath, dist_type)
 {
   intracls <- t(cluster_distances[[height]]$intracls.average)
-  intercls <- non_zero_min(cluster_distances[[height]]$intercls.single)
+  intercls <- non_zero_col_min(cluster_distances[[height]]$intercls.single)
   cluster_sizes <-  sapply(sort(unique(core_clusters[,height]),decreasing=F), function(x) {sum(core_clusters[,height] == x)})
   
   #make a data frame to make a scatterplot of intracls average vs. intercls single (at height 45)
@@ -569,50 +570,51 @@ draw_plot <- function(plot_func, clusters, cluster_distances, height, savefile, 
                                   "cluster_sizes" = cluster_sizes,
                                   stringsAsFactors = F)
   
-  plot_func(intra_vs_inter_df, height, savefile, savepath)
+  plot_func(intra_vs_inter_df, height, savepath, dist_type)
 }
 
 
 #Interchangeable plot functions
 #Scatterplot
-intra_inter_scatter_at_h <- function(df, h, savefile, savepath)
+intra_inter_scatter_at_h <- function(df, h, savepath, dist_type)
 {
   ggplot(df, aes((intracls_average), unlist(intercls_single))) +
     geom_point(aes(size = cluster_sizes), shape = 21, colour = "black", fill = "white", alpha = 1/2) +
-    ggtitle(paste0("Intra vs Inter Distances (Combined Core and Accessory) at Height ", h))+
-    xlab("Average Intracluster Distance") +
-    ylab("Minimum Single Linkage Interclsuter Distance")+
+    labs(title = paste0("Intra vs Inter Distances at ", h),
+         subtitle = paste0("(",dist_type," Distances)"),
+         x = "Average Intracluster Distance",
+         y = "Minimum Single Linkage Interclsuter Distance") +
     scale_y_continuous(limits = c(0,1.6)) +
     scale_x_continuous(limits = c(0,0.7)) +
     scale_size_area()
-  ggsave(file = paste0(savefile,"_avg_intra_vs_sing_inter_combined_dist_scatterplot.png") ,path = savepath)
+  ggsave(file = paste0(h,"_avg_intra_vs_sing_inter_combined_dist_scatterplot.png") ,path = savepath)
 }
 
 #Density plot
-intra_inter_density_at_h <- function(intra_vs_inter_df, h, savefile, savepath)
+intra_inter_density_at_h <- function(intra_vs_inter_df, h, savepath, dist_type)
 {
   df <- melt(intra_vs_inter_df, id = c("cluster_number","cluster_sizes"))
   ggplot(df, aes(value)) +
     geom_density(aes(fill = variable), alpha = 0.8) +
-    labs(title = paste0("Intra & Inter Distance Distribution at Height ", h),
-         subtitle = "(Combined Core and Accessory Distances)",
+    labs(title = paste0("Intra & Inter Distance Distribution at ", h),
+         subtitle = paste0("(",dist_type," Distances)"),
          fill = "Cluster Distances") +
     #scale_y_continuous(limits = c(0,100)) +
     scale_x_continuous(limits = c(0,1.65)) 
-    ggsave(file = paste0(savefile,"_avg_intra_sing_inter_combined_dist_density_plot.png") ,path = savepath, height = 8, width= 10)
+    ggsave(file = paste0(h,"_avg_intra_sing_inter_combined_dist_density_plot.png") ,path = savepath, height = 8, width= 10)
 }
 
 
 #Histogram of min(inter)/intra
-inter_intra_ratio_histogram_at_h <- function(intra_vs_inter_df, h, savefile, savepath)
+inter_intra_ratio_histogram_at_h <- function(intra_vs_inter_df, h, savepath, dist_type)
 {
   intra_vs_inter_df$ratio <- intra_vs_inter_df$intercls_single/intra_vs_inter_df$intracls_average
   ggplot(intra_vs_inter_df, aes(ratio)) +
     geom_histogram(binwidth = 1) +
-    labs(title = paste0("Inter/Intra Ratio Distribution at Height ", h),
-         subtitle = "(Combined Core and Accessory Distances)") +
+    labs(title = paste0("Inter/Intra Ratio Distribution at ", h),
+         subtitle = paste0("(",dist_type," Distances)")) +
     scale_x_continuous(limit = c(0,200), breaks = c(seq(from = 0, to = 200, by = 10)))
-  ggsave(file = paste0(savefile,"_avg_intra_sing_inter_combined_dist_histogram.png") ,path = savepath)
+  ggsave(file = paste0(h,"_avg_intra_sing_inter_combined_dist_histogram.png") ,path = savepath)
 }
 
 
@@ -620,18 +622,17 @@ inter_intra_ratio_histogram_at_h <- function(intra_vs_inter_df, h, savefile, sav
 #c(1,45,seq(25,430,25),430)
 #c(1:430)
 # heights <- c(1,45,100,250,430)
-heights <- c(1,45,seq(25,430,25),430)
+# heights <- c(1,45,seq(25,430,25),430)
 
-#heights <- c(1:430)
+heights <- c(1:430)
 for (i in heights)
 {
-  filename = paste0("h_",i)
   draw_plot(plot_func = intra_inter_scatter_at_h,
             clusters = core_clusters, 
-            cluster_distances = clusters_combined_distances, 
-            height = i, 
-            savefile = filename,
-            savepath = "/home/dbarker/nadege/acc_clustering" )
+            cluster_distances = clusters_combined_distances,  #clusters_combined_distances, clusters_bin_acc_distances
+            height = paste0(colnames(core_clusters)[i]), 
+            savepath = "/home/dbarker/nadege/acc_clustering" ,
+            dist_type = "Combined Core and Accessory")  #"Combined Core and Accessory", "Binary Accessory"
 }
 
 
