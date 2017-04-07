@@ -23,15 +23,16 @@ bin_acc_genes <- read.csv(file=binary_acc_file, row.names=1, header=T, sep=",")
 #colnames(bin_acc_genes) <- sub("X","", colnames(bin_acc_genes)) #Can't really pipe these because of this step
 dist_bin_acc <- jaccard(as.matrix(bin_acc_genes))
 
-#acc_genes <- read.table(file=acc_file, row.names = 1, header=T, sep=",")
-#colnames(acc_genes) <- sub("X","", colnames(acc_genes))
-#acc_genes[acc_genes == 0] <- NA 
-#dist_acc <- dist.gene(acc_genes, method = "pairwise", pairwise.deletion = T, variance = F) %>% as.matrix()
+acc_genes <- read.table(file=acc_file, row.names = 1, header=T, sep=",")
+colnames(acc_genes) <- sub("X","", colnames(acc_genes))
+acc_genes[acc_genes == 0] <- NA
+acc_genes[acc_genes == -1] <- NA
+# dist_acc <- dist.gene(acc_genes, method = "pairwise", pairwise.deletion = T, variance = F) %>% as.matrix()
 
 
 #cluster_distances <- mclapply(clusts, cls.scatt.diss.mx, diss.mx= dist_bin_acc, mc.cores = 7)
 
-cluster_distances <- mclapply(clusts, cls.scatt.diss.mx, diss.mx= as.matrix(dist_bin_acc), mc.cores = 6)
+# cluster_distances <- mclapply(clusts, cls.scatt.diss.mx, diss.mx= as.matrix(dist_bin_acc), mc.cores = 6)
 
 #"/home/dbarker/nadege/acc_clustering/acc_presence_absence_big_set.Rtab"
 #"/home/dbarker/nadege/acc_clustering/core_json_out.csv"
@@ -55,16 +56,16 @@ dist_acc <- dist.gene(acc_genes, method = "percent", pairwise.deletion = T, vari
 dist_core <- dist.gene(core_genes, method = "percent", pairwise.deletion = T, variance = F) %>% as.matrix()
 
 
-comp_dist_acc <- sqrt(dist_bin_acc^2 + dist_acc^2) %>% as.dist()
-combined_dist <- sqrt(dist_bin_acc^2 + dist_acc^2 + dist_core^2) %>% as.dist()
-allelic_dist <- sqrt(dist_core^2 + dist_acc^2) %>% as.dist()
+comp_dist_acc <- sqrt(dist_bin_acc^2 + dist_acc^2) #%>% as.dist()
+combined_dist <- sqrt(dist_bin_acc^2 + dist_acc^2 + dist_core^2) #%>% as.dist()
+allelic_dist <- sqrt(dist_core^2 + dist_acc^2) #%>% as.dist()
 
 comp_hc_acc <- hclust(comp_dist_acc, method="single")
 combined_hc <- hclust(combined_dist, method="single")
 
 #cut_heights <- unique(combined_hc$height) 
 
-comp_acc_clusters <- cutree(comp_hc_acc, h = seq(0,1.129,0.001))
+comp_acc_clusters <- cutree(comp_hc_acc, h = seq(0, max(round(comp_hc_acc$height + 0.005, digits = 2)),0.001))
 combined_clusters <- cutree(combined_hc, h = cut_heights) ###edit these numbers once you can look at the heights
 #h = seq(0,1.5,0.001)
 
@@ -72,7 +73,7 @@ colnames(comp_acc_clusters) <- paste0("h_",colnames(comp_acc_clusters))
 colnames(combined_clusters) <- paste0("h_",colnames(combined_clusters))
 
 
-#adjust awc function
+#adjust awc function (check dim and number of clusters, try to cut off when you still have three ish clusters)
 #adjust as.integer -> as.double to prevent truncation
 
 comp_acc_df <- stats_table(as.data.frame(comp_acc_clusters))
@@ -97,7 +98,7 @@ ggplot(na.omit(m), aes(x = Threshold )) +
   scale_x_continuous(breaks = c(seq(from = 0, to = max(combined_df$Threshold), by = 0.01), 115, 225)) #+
   #geom_vline(xintercept = c(0.0968), linetype='dashed')  
   
-ggsave(filename = "zoom_0_95_stats_table.png",path = "/home/dbarker/nadege/acc_clustering/", height = 8, width = 11)
+ggsave(filename = "combined_dist_stats_table.png",path = "/home/dbarker/nadege/acc_clustering/", height = 8, width = 11)
 
 library(clv)
 library(magrittr)
@@ -127,56 +128,31 @@ dist_mat_2_dist_val <- function(dist_matrix)
 dist_bin_acc_values <- dist_mat_2_dist_val(dist_bin_acc)
 dist_histogram(dist_bin_acc_values, 0, 1, 0.01, 0.1, "bin_acc_dist_histogram.png", "/home/dbarker/nadege/acc_clustering")
 
-# dist_bin_acc_values <- unlist(as.list(tril(dist_bin_acc, k = -1)))
-# dist_bin_acc_values[dist_bin_acc_values == 0] <- NA
-# ggplot(na.omit(as.data.frame(dist_bin_acc_values)),aes(dist_bin_acc_values)) + geom_histogram(binwidth = 0.01)+
-#   scale_x_continuous(limit = c(0,1), breaks = c(seq(from = 0, to = 1, by = 0.1)))
-# ggsave(file = "bin_acc_dist_histogram.png",path = "/home/dbarker/nadege/acc_clustering")
+
 
 dist_acc_values <- dist_mat_2_dist_val(dist_acc)
 dist_histogram(dist_acc_values, 0, 1, 0.01, 0.1, "acc_dist_histogram.png", "/home/dbarker/nadege/acc_clustering")
 
-# dist_acc_values <- unlist(as.list(tril(dist_acc, k = -1)))
-# dist_acc_values[dist_acc_values == 0] <- NA
-# ggplot(na.omit(as.data.frame(dist_acc_values)),aes(dist_acc_values)) + geom_histogram(binwidth = 0.01) +
-#   scale_x_continuous(limit = c(0,1), breaks = c(seq(from = 0, to = 1, by = 0.1)))
-# ggsave(file = "acc_dist_histogram.png",path = "/home/dbarker/nadege/acc_clustering")
+
 
 dist_core_values <- dist_mat_2_dist_val(dist_core)
 dist_histogram(dist_core_values, 0, 1, 0.01, 0.1, "core_dist_histogram.png", "/home/dbarker/nadege/acc_clustering")
 
-# dist_core_values <- unlist(as.list(tril(dist_core, k = -1)))
-# dist_core_values[dist_core_values == 0] <- NA
-# ggplot(na.omit(as.data.frame(dist_core_values)),aes(dist_core_values)) + geom_histogram(binwidth = 0.01) +
-#   scale_x_continuous(limit = c(0,1), breaks = c(seq(from = 0, to = 1, by = 0.1)))
-# ggsave(file = "core_dist_histogram.png",path = "/home/dbarker/nadege/acc_clustering")
+
 
 comp_dist_values <- dist_mat_2_dist_val(comp_dist_acc)
 dist_histogram(comp_dist_values, 0, 1.42, 0.01, 0.1, "comp_acc_dist_histogram.png", "/home/dbarker/nadege/acc_clustering")
 
-# comp_dist_values <- unlist(as.list(tril(as.matrix(comp_dist_acc), k = -1)))
-# comp_dist_values[comp_dist_values == 0] <- NA
-# ggplot(na.omit(as.data.frame(comp_dist_values)),aes(comp_dist_values)) + geom_histogram(binwidth = 0.01) +
-#   scale_x_continuous(limit = c(0,1.42), breaks = c(seq(from = 0, to = 1.42, by = 0.1)))
-# ggsave(file = "comp_acc_dist_histogram.png",path = "/home/dbarker/nadege/acc_clustering")
+
 
 combined_dist_values <- dist_mat_2_dist_val(combined_dist)
 dist_histogram(combined_dist_values, 0, 1.74, 0.01, 0.1, "combined_dist_histogram.png", "/home/dbarker/nadege/acc_clustering")
 
-# combined_dist_values <- unlist(as.list(tril(as.matrix(combined_dist), k = -1)))
-# combined_dist_values[combined_dist_values == 0] <- NA
-# ggplot(na.omit(as.data.frame(combined_dist_values)),aes(combined_dist_values)) + geom_histogram(binwidth = 0.01) +
-#   scale_x_continuous(limit = c(0,1.74), breaks = c(seq(from = 0, to = 1.74, by = 0.1)))
-# ggsave(file = "combined_dist_histogram.png",path = "/home/dbarker/nadege/acc_clustering")
+
 
 allelic_dist_values <- dist_mat_2_dist_val(allelic_dist)
 dist_histogram(allelic_dist_values, 0, 1.42, 0.01, 0.1, "allelic_dist_histogram.png", "/home/dbarker/nadege/acc_clustering")
 
-# allelic_dist_values <- unlist(as.list(tril(as.matrix(allelic_dist), k = -1)))
-# allelic_dist_values[allelic_dist_values == 0] <- NA
-# ggplot(na.omit(as.data.frame(allelic_dist_values)),aes(allelic_dist_values)) + geom_histogram(binwidth = 0.01) +
-#   scale_x_continuous(limit = c(0,1.42), breaks = c(seq(from = 0, to = 1.42, by = 0.1)))
-# ggsave(file = "allelic_dist_histogram.png",path = "/home/dbarker/nadege/acc_clustering")
 
 
 #Combined histograms (faceted)
@@ -217,8 +193,8 @@ ggsave(file = "all_dist_histograms_0.25.png",path = "/home/dbarker/nadege/acc_cl
 # ggsave(file = "allelic_core_bin_acc_dist_scatterplot_line.png",path = "/home/dbarker/nadege/acc_clustering")
 
 
-draw_dist_vs_dist_scatt(dist_core, comp_dist_acc, "Allelic Core", "Combined Accessory",
-                        "allelic_core_combined_acc_dist_scatterplot_line_percent_scaled.png", "/home/dbarker/nadege/acc_clustering/")
+draw_dist_vs_dist_scatt(dist_bin_acc, dist_acc, "Binary Accessory", "Allelic Accessory",
+                        "bin_acc_vs_acc_dist_scatterplot_line.png", "/home/dbarker/nadege/acc_clustering/", percent = F)
 
 
 draw_dist_vs_dist_scatt <- function(dist1, dist2, title1, title2, outfile, outpath, percent = T)
@@ -259,11 +235,14 @@ return_same <- function(x)
 cg_dendro <- hclust(as.dist(dist_core), method = "single") %>% as.dendrogram()
 
 
-#combined dist
-#brewer.pal(7,"Set3")
-#c(0, 0.35, 0.8, 0.95, 1.2, 1.4, 1.55, 1.7)
-#Set 3 with red and green swapped
-#c("#8DD3C7", "#FFFFB3", "#BEBADA", "#B3DE69", "#80B1D3", "#FDB462", "#FB8072")
+
+# Coloured heatmaps and histograms
+
+#combined_dist
+# draw_heatmap(combined_dist, 
+#              "/home/dbarker/nadege/acc_clustering/coloured_combined_dist_heatmap.png",
+#              "Combined", 0, colours = c("#8DD3C7", "#FFFFB3", "#BEBADA", "#B3DE69", "#80B1D3", "#FDB462", "#FB8072"), 
+#              col_breaks = c(0, 0.35, 0.8, 0.95, 1.2, 1.4, 1.55, 1.7))
 #dist_combined_df
 # colour_dist_histogram(dist_values_df = dist_combined_df, min = 0, max = max(dist_combined_df$distance),
 #                       bin_width = 0.01, break_width = 0.1,
@@ -273,8 +252,10 @@ cg_dendro <- hclust(as.dist(dist_core), method = "single") %>% as.dendrogram()
 #                       out_path = "/home/dbarker/nadege/acc_clustering/")
 
 #dist_core
-#brewer.pal(6,"Set3")
-#c(0, 0.2, 0.45, 0.57, 0.77, 0.92, 1)
+# draw_heatmap(dist_core,
+#              "/home/dbarker/nadege/acc_clustering/coloured_core_dist_heatmap.png",
+#              "Allelic Core", 0, colours = brewer.pal(6,"Set3"),
+#              col_breaks = c(0, 0.2, 0.45, 0.57, 0.77, 0.92, 1))
 #dist_core_df
 # colour_dist_histogram(dist_values_df = dist_core_df, min = 0, max = max(dist_core_df$distance),
 #                       bin_width = 0.01, break_width = 0.1,
@@ -284,19 +265,25 @@ cg_dendro <- hclust(as.dist(dist_core), method = "single") %>% as.dendrogram()
 #                       out_path = "/home/dbarker/nadege/acc_clustering/")
 
 #dist_acc
-#brewer.pal(6,"Set3")
-#c(0, 0.25, 0.53, 0.65, 0.78, 0.92, 1)
+# draw_heatmap(dist_acc, 
+#              "/home/dbarker/nadege/acc_clustering/coloured_acc_dist_heatmap.png",
+#              "Allelic Accessory", 0, colours = brewer.pal(6,"Set3"), 
+#              col_breaks = c(0, 0.25, 0.53, 0.65, 0.8, 0.93, 1))
 #dist_acc_df
 # colour_dist_histogram(dist_values_df = dist_acc_df, min = 0, max = max(dist_acc_df$distance),
 #                       bin_width = 0.01, break_width = 0.1,
 #                       colours = brewer.pal(6,"Set3"),
-#                       col_breaks = c(0, 0.25, 0.53, 0.65, 0.78, 0.92, round(max(dist_acc_df$distance)+0.005, digits = 2)),
+#                       col_breaks = c(0, 0.25, 0.53, 0.65, 0.8, 0.93, round(max(dist_acc_df$distance)+0.005, digits = 2)),
 #                       out_file = "acc_dist_coloured_histogram.png",
 #                       out_path = "/home/dbarker/nadege/acc_clustering/")
 
 #dist_bin_acc
 #brewer.pal(5,"Set3")
 #c(0, 0.2, 0.35, 0.5, 0.67, 0.8)
+# draw_heatmap(dist_bin_acc,
+#              "/home/dbarker/nadege/acc_clustering/coloured_bin_acc_dist_heatmap.png",
+#              "Binary Accessory", 0, colours = brewer.pal(5,"Set3"),
+#              col_breaks = c(0, 0.2, 0.35, 0.5, 0.67, 0.8))
 #dist_bin_acc_df
 # colour_dist_histogram(dist_values_df = dist_bin_acc_df, min = 0, max = max(dist_bin_acc_df$distance),
 #                       bin_width = 0.01, break_width = 0.1,
@@ -306,33 +293,31 @@ cg_dendro <- hclust(as.dist(dist_core), method = "single") %>% as.dendrogram()
 #                       out_path = "/home/dbarker/nadege/acc_clustering/")
 
 #comp_dist_acc
-#c("#8DD3C7", "#FFFFB3", "#BEBADA", "#B3DE69", "#80B1D3", "#FDB462", "#FB8072")
-#c(0, 0.3, 0.61, 0.75, 0.9, 1.06, 1.18, 1.3)
-#dist_comb_acc_df
+# draw_heatmap(comp_dist_acc,
+#              "/home/dbarker/nadege/acc_clustering/coloured_combined_acc_dist_heatmap.png",
+#              "Combined Allelic", 0, colours = c("#8DD3C7", "#FFFFB3", "#BEBADA", "#B3DE69", "#80B1D3", "#FDB462", "#FB8072"),
+#              col_breaks = c(0, 0.3, 0.61, 0.75, 0.9, 1.06, 1.2, 1.3))
 # colour_dist_histogram(dist_values_df = dist_comb_acc_df, min = 0, max = max(dist_comb_acc_df$distance),
 #                       bin_width = 0.01, break_width = 0.1,
 #                       colours = c("#8DD3C7", "#FFFFB3", "#BEBADA", "#B3DE69", "#80B1D3", "#FDB462", "#FB8072"),
-#                       col_breaks = c(0, 0.3, 0.61, 0.75, 0.9, 1.06, 1.18, round(max(dist_comb_acc_df$distance)+0.005, digits = 2)),
+#                       col_breaks = c(0, 0.3, 0.61, 0.75, 0.9, 1.06, 1.2, round(max(dist_comb_acc_df$distance)+0.005, digits = 2)),
 #                       out_file = "comp_acc_dist_coloured_histogram.png",
 #                       out_path = "/home/dbarker/nadege/acc_clustering/")
 
 
 #allelic_dist
-#brewer.pal(6,"Set3")
-#c(0, 0.3, 0.7, 0.87, 1.13, 1.31, 1.42)
+# draw_heatmap(allelic_dist, 
+#              "/home/dbarker/nadege/acc_clustering/coloured_allelic_dist_heatmap.png",
+#              "Allelic", 0, colours = brewer.pal(6,"Set3"), 
+#              col_breaks = c(0, 0.3, 0.74, 0.87, 1.14, 1.34, 1.42))
 #dist_allelic_df
 # colour_dist_histogram(dist_values_df = dist_allelic_df, min = 0, max = max(dist_allelic_df$distance),
 #                       bin_width = 0.01, break_width = 0.1,
 #                       colours = brewer.pal(6,"Set3"),
-#                       col_breaks = c(0, 0.3, 0.7, 0.87, 1.13, 1.31, round(max(dist_allelic_df$distance)+0.005, digits = 2)),
+#                       col_breaks = c(0, 0.3, 0.74, 0.87, 1.14, 1.34, round(max(dist_allelic_df$distance)+0.005, digits = 2)),
 #                       out_file = "allelic_dist_coloured_histogram.png",
 #                       out_path = "/home/dbarker/nadege/acc_clustering/")
 
-
-draw_heatmap(allelic_dist, 
-             "/home/dbarker/nadege/acc_clustering/coloured_select_allelic_dist_heatmap.png",
-             "Combined", 0, colours = brewer.pal(6,"Set3"), 
-             col_breaks = c(0, 0.3, 0.7, 0.87, 1.13, 1.31, 1.42))
 
 
 #ggdendrogram(cg_dendro)
