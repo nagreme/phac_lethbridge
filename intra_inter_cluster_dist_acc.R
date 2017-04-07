@@ -15,6 +15,7 @@ library(Matrix)
 
 clusts_file <- "/home/nadege/Desktop/acc_clustering/goeburst_clusters.tsv"
 #acc_file <- "/home/nadege/Desktop/mist/big_set/acc_json_out.csv"
+acc_file <- "/home/dbarker/nadege/acc_clustering/acc_json_out.csv"
 binary_acc_file <- "/home/nadege/Desktop/acc_clustering/acc_presence_absence_big_set.Rtab"
 
 clusts <- read.table(file=clusts_file, row.names = 1, header=T, sep="\t")
@@ -29,6 +30,21 @@ acc_genes[acc_genes == 0] <- NA
 acc_genes[acc_genes == -1] <- NA
 # dist_acc <- dist.gene(acc_genes, method = "pairwise", pairwise.deletion = T, variance = F) %>% as.matrix()
 
+#redo bin_acc/gene presence absence with the msit data to compare distributions
+mist_pres_abs_genes_p0 <- t(acc_genes) #assuming acc_genes are already filtered by wanted genomes
+mist_pres_abs_genes_p0[is.na(mist_pres_abs_genes_p0)] <- 0 #partials and null are absence
+mist_pres_abs_genes_p0[mist_pres_abs_genes_p0 > 0] <- 1 #alleles are presence
+dist_mist_bin_acc_p0 <- jaccard(as.matrix(mist_pres_abs_genes_p0))
+
+
+mist_pres_abs_genes_p1 <- read.table(file=acc_file, row.names = 1, header=T, sep=",")
+colnames(mist_pres_abs_genes_p1) <- sub("X","", colnames(mist_pres_abs_genes_p1))
+mist_pres_abs_genes_p1[mist_pres_abs_genes_p1 > 0] <- 1 #alleles and
+mist_pres_abs_genes_p1[mist_pres_abs_genes_p1 == -1] <- 1 #partials are presence
+#null are already as absence
+mist_pres_abs_genes_p1 <- mist_pres_abs_genes_p1[which(rownames(mist_pres_abs_genes_p1) %in% wanted_genomes),]
+mist_pres_abs_genes_p1 <- t(mist_pres_abs_genes_p1) #for jaccard
+dist_mist_bin_acc_p1 <- jaccard(as.matrix(mist_pres_abs_genes_p1))
 
 #cluster_distances <- mclapply(clusts, cls.scatt.diss.mx, diss.mx= dist_bin_acc, mc.cores = 7)
 
@@ -50,6 +66,7 @@ wanted_genomes <- rownames(clusters)
 #filter new_df => if any(curr_genome_name == rownames)
 acc_genes <- acc_genes[which(rownames(acc_genes) %in% wanted_genomes),]
 core_genes <- core_genes[which(rownames(core_genes) %in% wanted_genomes),]
+#bin acc was already filtered
 
 
 dist_acc <- dist.gene(acc_genes, method = "percent", pairwise.deletion = T, variance = F) %>% as.matrix()
@@ -152,6 +169,13 @@ dist_histogram(combined_dist_values, 0, 1.74, 0.01, 0.1, "combined_dist_histogra
 
 allelic_dist_values <- dist_mat_2_dist_val(allelic_dist)
 dist_histogram(allelic_dist_values, 0, 1.42, 0.01, 0.1, "allelic_dist_histogram.png", "/home/dbarker/nadege/acc_clustering")
+
+
+mist_bin_dist_values_p0 <- dist_mat_2_dist_val(dist_mist_bin_acc_p0)
+dist_histogram(mist_bin_dist_values_p0, 0, 1, 0.01, 0.1, "mist_bin_acc_dist_histogram_partials_as_abs.png", "/home/dbarker/nadege/acc_clustering")
+
+mist_bin_dist_values_p1 <- dist_mat_2_dist_val(dist_mist_bin_acc_p1)
+dist_histogram(mist_bin_dist_values_p1, 0, 1, 0.01, 0.1, "mist_bin_acc_dist_histogram_partials_as_pres.png", "/home/dbarker/nadege/acc_clustering")
 
 
 
@@ -620,6 +644,53 @@ for (i in heights)
             dist_type = "Combined Core and Accessory")  #"Combined Core and Accessory", "Binary Accessory"
 }
 
+
+#Investigating the genomes at the edge of the heatmap/dendro and what's causing the little 
+#spike on the right side of the dist_bin_acc histogram
+target_genome_indices <- order.dendrogram(cg_dendro)[1:14]
+target_genomes <- rownames(dist_core)[target_genome_indices]
+
+# counts <- lapply(target_genomes, function(genome) 
+#   { 
+#     apply(bin_acc_genes, 1, function(gene_row) 
+#       { 
+#         if (gene_row[genome] == 1)
+#         {
+#           sum(gene_row)
+#         } #if
+#       }) #apply (gene rows)
+#   }) #lapply (target_genomes)
+
+row_counts <- apply(bin_acc_genes, 1, sum) %>% as.list()
+
+
+# genes <- row_count[which(bin_acc_genes[,target_genomes] == 1)]
+
+
+genome_genes <- lapply(target_genomes, function(x) { row_counts[which(bin_acc_genes[,x] == 1)]})
+# genome_genes_control <- lapply(c(3000:3005), function(x) { row_counts[which(bin_acc_genes[,x] == 1)]})
+
+gene_count_histogram <- function(dist_values, xmin, xmax, ymin, ymax, bin_width, break_width, out_file, out_path)
+{
+  ggplot(na.omit(as.data.frame(dist_values)),aes(as.data.frame(dist_values))) + 
+    geom_histogram(binwidth = bin_width, center = 0)+
+    scale_x_continuous(limit = c(xmin,xmax), breaks = c(seq(from = xmin, to = xmax, by = break_width))) +
+    scale_y_continuous(limit = c(ymin, ymax))
+  ggsave(file = out_file, path = out_path)
+}
+
+for (i in c(1:14))
+{
+  gene_count_histogram(dist_values = t(data.frame(genome_genes[[i]])/max(as.data.frame(genome_genes))),
+                 xmin = 0,
+                 xmax = 1,
+                 ymin = 0,
+                 ymax = 100,
+                 bin_width = 0.005,
+                 break_width = 0.1,
+                 out_file = paste0(target_genomes[i],"_genes_occurrences_histogram.png"),
+                 out_path = "/home/dbarker/nadege/acc_clustering")
+}
 
 
 
