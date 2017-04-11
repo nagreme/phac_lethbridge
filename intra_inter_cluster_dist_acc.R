@@ -80,6 +80,7 @@ allelic_dist <- sqrt(dist_core^2 + dist_acc^2) #%>% as.dist()
 comp_hc_acc <- hclust(comp_dist_acc, method="single")
 combined_hc <- hclust(combined_dist, method="single")
 
+
 #cut_heights <- unique(combined_hc$height) 
 
 comp_acc_clusters <- cutree(comp_hc_acc, h = seq(0, max(round(comp_hc_acc$height + 0.005, digits = 2)),0.001))
@@ -88,6 +89,17 @@ combined_clusters <- cutree(combined_hc, h = cut_heights) ###edit these numbers 
 
 colnames(comp_acc_clusters) <- paste0("h_",colnames(comp_acc_clusters))
 colnames(combined_clusters) <- paste0("h_",colnames(combined_clusters))
+
+
+
+hc_allelic <- hclust(as.dist(allelic_dist), method = "single")
+allelic_clusters <- cutree(hc_allelic, h = seq(0, 1.4, 0.0025)) #seq(0, 1.4, 0.0025) generates 561 heights
+colnames(allelic_clusters) <- lapply(colnames(allelic_clusters), function(x) sprintf("%1.4f", as.double(x)))
+colnames(allelic_clusters) <- paste0("h_",colnames(allelic_clusters))
+
+allelic_df <- stats_table(as.data.frame(allelic_clusters))
+m <- melt(combined_df, id.vars = 'Threshold')
+
 
 
 #adjust awc function (check dim and number of clusters, try to cut off when you still have three ish clusters)
@@ -112,10 +124,10 @@ ggplot(na.omit(m), aes(x = Threshold )) +
   geom_line(aes(y = value)) +
   #geom_line(aes(y = value, color = Group)) + 
   facet_grid(variable ~ ., scales = 'free_y', switch = 'y') + labs(x = 'heights', y = '') +
-  scale_x_continuous(breaks = c(seq(from = 0, to = max(combined_df$Threshold), by = 0.01), 115, 225)) #+
+  scale_x_continuous(breaks = c(seq(from = 0, to = 1.4, by = 0.1), 115, 225)) #+
   #geom_vline(xintercept = c(0.0968), linetype='dashed')  
   
-ggsave(filename = "combined_dist_stats_table.png",path = "/home/dbarker/nadege/acc_clustering/", height = 8, width = 11)
+ggsave(filename = "allelic_dist_stats_table.png",path = "/home/dbarker/nadege/acc_clustering/", height = 8, width = 11)
 
 library(clv)
 library(magrittr)
@@ -130,6 +142,7 @@ library(Matrix)
 library(ggdendro)
 library(gplots)
 library(RColorBrewer)
+library(plyr)
 
 # load(file = "/media/dbarker/cfia2/nadege/acc_clus_Rdat/.RData")
 
@@ -258,6 +271,7 @@ return_same <- function(x)
 
 cg_dendro <- hclust(as.dist(dist_core), method = "single") %>% as.dendrogram()
 
+allelic_dendro <-hclust(as.dist(allelic_dist), method = "single") %>% as.dendrogram()
 
 
 # Coloured heatmaps and histograms
@@ -279,7 +293,9 @@ cg_dendro <- hclust(as.dist(dist_core), method = "single") %>% as.dendrogram()
 # draw_heatmap(dist_core,
 #              "/home/dbarker/nadege/acc_clustering/coloured_core_dist_heatmap.png",
 #              "Allelic Core", 0, colours = brewer.pal(6,"Set3"),
-#              col_breaks = c(0, 0.2, 0.45, 0.57, 0.77, 0.92, 1))
+#              col_breaks = c(0, 0.2, 0.45, 0.57, 0.77, 0.92, 1),
+#              dendrogram = allelic_dendro,
+#              clstrd_by = "Allelic Core and Accessory")
 #dist_core_df
 # colour_dist_histogram(dist_values_df = dist_core_df, min = 0, max = max(dist_core_df$distance),
 #                       bin_width = 0.01, break_width = 0.1,
@@ -289,10 +305,12 @@ cg_dendro <- hclust(as.dist(dist_core), method = "single") %>% as.dendrogram()
 #                       out_path = "/home/dbarker/nadege/acc_clustering/")
 
 #dist_acc
-# draw_heatmap(dist_acc, 
+# draw_heatmap(dist_acc,
 #              "/home/dbarker/nadege/acc_clustering/coloured_acc_dist_heatmap.png",
-#              "Allelic Accessory", 0, colours = brewer.pal(6,"Set3"), 
-#              col_breaks = c(0, 0.25, 0.53, 0.65, 0.8, 0.93, 1))
+#              "Allelic Accessory", 0, colours = brewer.pal(6,"Set3"),
+#              col_breaks = c(0, 0.25, 0.53, 0.65, 0.8, 0.93, 1),
+             # dendrogram = allelic_dendro,
+             # clstrd_by = "Allelic Core and Accessory")
 #dist_acc_df
 # colour_dist_histogram(dist_values_df = dist_acc_df, min = 0, max = max(dist_acc_df$distance),
 #                       bin_width = 0.01, break_width = 0.1,
@@ -307,7 +325,9 @@ cg_dendro <- hclust(as.dist(dist_core), method = "single") %>% as.dendrogram()
 # draw_heatmap(dist_bin_acc,
 #              "/home/dbarker/nadege/acc_clustering/coloured_bin_acc_dist_heatmap.png",
 #              "Binary Accessory", 0, colours = brewer.pal(5,"Set3"),
-#              col_breaks = c(0, 0.2, 0.35, 0.5, 0.67, 0.8))
+#              col_breaks = c(0, 0.2, 0.35, 0.5, 0.67, 0.8),
+#              dendrogram = allelic_dendro,
+#              clstrd_by = "Allelic Core and Accessory")
 #dist_bin_acc_df
 # colour_dist_histogram(dist_values_df = dist_bin_acc_df, min = 0, max = max(dist_bin_acc_df$distance),
 #                       bin_width = 0.01, break_width = 0.1,
@@ -330,10 +350,12 @@ cg_dendro <- hclust(as.dist(dist_core), method = "single") %>% as.dendrogram()
 
 
 #allelic_dist
-# draw_heatmap(allelic_dist, 
+# draw_heatmap(allelic_dist,
 #              "/home/dbarker/nadege/acc_clustering/coloured_allelic_dist_heatmap.png",
-#              "Allelic", 0, colours = brewer.pal(6,"Set3"), 
-#              col_breaks = c(0, 0.3, 0.74, 0.87, 1.14, 1.34, 1.42))
+#              "Allelic", 0, colours = brewer.pal(6,"Set3"),
+#              col_breaks = c(0, 0.3, 0.74, 0.87, 1.14, 1.34, 1.42),
+#              dendrogram = allelic_dendro,
+#              clstrd_by = "Allelic Core and Accessory")
 #dist_allelic_df
 # colour_dist_histogram(dist_values_df = dist_allelic_df, min = 0, max = max(dist_allelic_df$distance),
 #                       bin_width = 0.01, break_width = 0.1,
@@ -343,14 +365,14 @@ cg_dendro <- hclust(as.dist(dist_core), method = "single") %>% as.dendrogram()
 #                       out_path = "/home/dbarker/nadege/acc_clustering/")
 
 
-
+# allelic_dendro
 #ggdendrogram(cg_dendro)
-draw_heatmap <- function(dist_matrix, filename, title, max, colours, col_breaks)
+draw_heatmap <- function(dist_matrix, filename, title, max, colours, col_breaks, dendrogram, clstrd_by)
 {
   png(filename = filename, width=12, height=12, units="in", res = 450)
   dist_matrix[1,1] <- max
-  heatmap.2(as.matrix(dist_matrix),Rowv = cg_dendro, Colv = "Rowv", distfun=return_same, dendrogram = "both", symm = T,
-            trace = "none", col = colours, breaks = col_breaks, main = paste0(title," Distance Matrix Clustered by Core"),
+  heatmap.2(as.matrix(dist_matrix),Rowv = dendrogram, Colv = "Rowv", distfun=return_same, dendrogram = "both", symm = T,
+            trace = "none", col = colours, breaks = col_breaks, main = paste0(title," Distance Matrix Clustered by ",clstrd_by),
             key.title = "Distance Distribution", key.xlab = paste0(title, " Distance"))
   dist_bin_acc[1,1] <- 0
   dev.off()
@@ -401,7 +423,8 @@ subset_dist <- ifelse(dist_bin_acc < 0.67 | dist_bin_acc > 1, 0, dist_bin_acc)
 # subset_dist[subset_dist < 1.55 | subset_dist > 1.6] <- 0
 
 
-draw_heatmap(subset_dist, "/home/dbarker/nadege/acc_clustering/select_bin_acc_dist_0.67-1.00_heatmap.png", "Allelic Accessory", 0)
+draw_heatmap(subset_dist, "/home/dbarker/nadege/acc_clustering/select_bin_acc_dist_0.67-1.00_heatmap.png", 
+             "Allelic Accessory", 0)
 
 # png(filename = "/home/dbarker/nadege/acc_clustering/bin_acc_heatmap.png", width=12, height=12, units="in", res = 450)
 # dist_bin_acc[1,1] <- 1.7
@@ -419,6 +442,13 @@ draw_heatmap(subset_dist, "/home/dbarker/nadege/acc_clustering/select_bin_acc_di
 
 clusters_combined_distances <- mclapply(core_clusters, cls.scatt.diss.mx, diss.mx= as.matrix(combined_dist), mc.cores = 12)
 clusters_bin_acc_distances <- mclapply(core_clusters, cls.scatt.diss.mx, diss.mx= as.matrix(dist_bin_acc), mc.cores = 12)
+
+#vvv returns errors on 4+ threads (2 and 3 were not tested)
+clusters_allelic_distances <- mclapply(as.data.frame(allelic_clusters), cls.scatt.diss.mx, 
+                                       diss.mx= allelic_dist, mc.cores = 1)
+
+
+
 
 #clusters_combined_distances[[height_index]]$int__cls.method[cluster_number]
 
@@ -570,14 +600,16 @@ draw_plot <- function(plot_func, clusters, cluster_distances, height, savepath, 
 {
   intracls <- t(cluster_distances[[height]]$intracls.average)
   intercls <- non_zero_col_min(cluster_distances[[height]]$intercls.single)
-  cluster_sizes <-  sapply(sort(unique(core_clusters[,height]),decreasing=F), function(x) {sum(core_clusters[,height] == x)})
-  
+
   #make a data frame to make a scatterplot of intracls average vs. intercls single (at height 45)
-  intra_vs_inter_df <- data.frame("cluster_number" = c(1:length(intracls)),
+  intra_vs_inter_df <- data.frame("x" = c(1:length(intracls)),
                                   "intracls_average" = intracls,
                                   "intercls_single" = as.numeric(intercls),
-                                  "cluster_sizes" = cluster_sizes,
                                   stringsAsFactors = F)
+  
+  #Add information about cluster size
+  intra_vs_inter_df <- join(intra_vs_inter_df, count(clusters[,height]), by = "x")
+  colnames(intra_vs_inter_df)[1] <- "cluster_number"
   
   plot_func(intra_vs_inter_df, height, savepath, dist_type)
 }
@@ -587,15 +619,19 @@ draw_plot <- function(plot_func, clusters, cluster_distances, height, savepath, 
 #Scatterplot
 intra_inter_scatter_at_h <- function(df, h, savepath, dist_type)
 {
+  seg_coords <- data.frame(x1 = 0, x2 = 0.5, x3 = 0.1, y1 = 0, y2 = 0.5)
+  
   ggplot(df, aes((intracls_average), unlist(intercls_single))) +
-    geom_point(aes(size = cluster_sizes), shape = 21, colour = "black", fill = "white", alpha = 1/2) +
+    geom_point(aes(size = freq), shape = 21, colour = "black", fill = "white", alpha = 1/2) +
     labs(title = paste0("Intra vs Inter Distances at ", h),
          subtitle = paste0("(",dist_type," Distances)"),
          x = "Average Intracluster Distance",
          y = "Minimum Single Linkage Interclsuter Distance") +
     scale_y_continuous(limits = c(0,1.6)) +
     scale_x_continuous(limits = c(0,0.7)) +
-    scale_size_area()
+    scale_size_area() +
+    geom_segment(aes(x = 0, xend = 0.6, y = 0, yend = 0.6), color = "red") + 
+    geom_segment(aes(x = 0, xend = 0.3, y = 0, yend = 1.5), color = "blue")
   ggsave(file = paste0(h,"_avg_intra_vs_sing_inter_combined_dist_scatterplot.png") ,path = savepath)
 }
 
@@ -614,16 +650,19 @@ intra_inter_density_at_h <- function(intra_vs_inter_df, h, savepath, dist_type)
 }
 
 
-#Histogram of min(inter)/intra
-inter_intra_ratio_histogram_at_h <- function(intra_vs_inter_df, h, savepath, dist_type)
+#Histogram of intra/min(inter) (minimization)
+intra_inter_ratio_histogram_at_h <- function(intra_vs_inter_df, h, savepath, dist_type)
 {
-  intra_vs_inter_df$ratio <- intra_vs_inter_df$intercls_single/intra_vs_inter_df$intracls_average
+  intra_vs_inter_df$ratio <- intra_vs_inter_df$intracls_average/intra_vs_inter_df$intercls_single
+  # intra_vs_inter_df$ratio <- intra_vs_inter_df$intercls_single/intra_vs_inter_df$intracls_average
   ggplot(intra_vs_inter_df, aes(ratio)) +
-    geom_histogram(binwidth = 1) +
-    labs(title = paste0("Inter/Intra Ratio Distribution at ", h),
+    geom_histogram(binwidth = 0.005) +
+    labs(title = paste0("Intra/Inter Ratio Distribution at ", h),
          subtitle = paste0("(",dist_type," Distances)")) +
-    scale_x_continuous(limit = c(0,200), breaks = c(seq(from = 0, to = 200, by = 10)))
-  ggsave(file = paste0(h,"_avg_intra_sing_inter_combined_dist_histogram.png") ,path = savepath)
+    scale_x_continuous(limit = c(0,0.5), breaks = c(seq(from = 0, to = 0.5, by = 0.05))) +
+    scale_y_continuous(limit = c(0, 20), breaks = c(seq(0, 20, 2.5)))
+    theme_bw()
+  ggsave(file = paste0(h,"_sing_inter_avg_intra_allelic_dist_histogram.png") ,path = savepath)
 }
 
 
@@ -633,15 +672,18 @@ inter_intra_ratio_histogram_at_h <- function(intra_vs_inter_df, h, savepath, dis
 # heights <- c(1,45,100,250,430)
 # heights <- c(1,45,seq(25,430,25),430)
 
-heights <- c(1:430)
+#c(1:560) for allelic clusters
+
+# heights <- c(1,50,100,150,200,250,300,350,400,450,500,550)
+heights <- c(1:560)
 for (i in heights)
 {
-  draw_plot(plot_func = intra_inter_scatter_at_h,
-            clusters = core_clusters, 
-            cluster_distances = clusters_combined_distances,  #clusters_combined_distances, clusters_bin_acc_distances
-            height = paste0(colnames(core_clusters)[i]), 
+  draw_plot(plot_func = intra_inter_ratio_histogram_at_h,
+            clusters = allelic_clusters, 
+            cluster_distances = clusters_allelic_distances,  #clusters_combined_distances, clusters_bin_acc_distances
+            height = paste0(colnames(allelic_clusters)[i]), 
             savepath = "/home/dbarker/nadege/acc_clustering" ,
-            dist_type = "Combined Core and Accessory")  #"Combined Core and Accessory", "Binary Accessory"
+            dist_type = "Allelic Core and Accessory")  #"Combined Core and Accessory", "Binary Accessory"
 }
 
 
