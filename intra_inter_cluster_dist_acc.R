@@ -660,7 +660,7 @@ intra_inter_ratio_histogram_at_h <- function(intra_vs_inter_df, h, savepath, dis
     labs(title = paste0("Intra/Inter Ratio Distribution at ", h),
          subtitle = paste0("(",dist_type," Distances)")) +
     scale_x_continuous(limit = c(0,0.5), breaks = c(seq(from = 0, to = 0.5, by = 0.05))) +
-    scale_y_continuous(limit = c(0, 20), breaks = c(seq(0, 20, 2.5)))
+    scale_y_continuous(limit = c(0, 20), breaks = c(seq(0, 20, 2)))
     theme_bw()
   ggsave(file = paste0(h,"_sing_inter_avg_intra_allelic_dist_histogram.png") ,path = savepath)
 }
@@ -733,6 +733,41 @@ for (i in c(1:14))
                  out_file = paste0(target_genomes[i],"_genes_occurrences_histogram.png"),
                  out_path = "/home/dbarker/nadege/acc_clustering")
 }
+
+
+
+#Sum of inter/intra ratios as a funciton of height (allelic_dist)
+
+sum_intra_inter_ratios_at_h <- function(height, cluster_distances, clusters)
+{
+    intracls <- t(cluster_distances[[height]]$intracls.average)
+    intercls <- non_zero_col_min(cluster_distances[[height]]$intercls.single)
+    
+    #make a data frame to make a scatterplot of intracls average vs. intercls single (at height 45)
+    intra_vs_inter_df <- data.frame("x" = c(1:length(intracls)),
+                                    "intracls_average" = intracls,
+                                    "intercls_single" = as.numeric(intercls),
+                                    stringsAsFactors = F)
+    
+    #Add information about cluster size
+    intra_vs_inter_df <- join(intra_vs_inter_df, count(clusters[,height]), by = "x")
+    colnames(intra_vs_inter_df)[1] <- "cluster_number"
+    
+    intra_vs_inter_df$ratio <- intra_vs_inter_df$intracls_average/intra_vs_inter_df$intercls_single
+    
+    intra_vs_inter_df$cls_ratio <- intra_vs_inter_df$freq * intra_vs_inter_df$ratio
+    
+    sum(intra_vs_inter_df$cls_ratio)
+}
+
+
+ratios_df <- data.frame(abs_height = colnames(allelic_clusters)[2:557],
+                        rel_height = c(2:557))
+ratios_df$ratio_w_sum <- sapply(ratios_df$rel_height[1:556], 
+                               function(x) sum_intra_inter_ratios_at_h(x, clusters_allelic_distances, allelic_clusters)) 
+
+
+
 
 
 
