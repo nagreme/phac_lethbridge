@@ -766,8 +766,23 @@ ratios_df <- data.frame(abs_height = colnames(allelic_clusters)[2:557],
 ratios_df$ratio_w_sum <- sapply(ratios_df$rel_height[1:556], 
                                function(x) sum_intra_inter_ratios_at_h(x, clusters_allelic_distances, allelic_clusters)) 
 
+ratios_df$intracls_w_sum <- sapply(ratios_df$rel_height[1:556],
+                                   function(x) sum(clusters_allelic_distances[[x]]$intracls.average * count(allelic_clusters[,x])$freq))
+
+ratios_df$intercls_w_sum <- sapply(ratios_df$rel_height[1:556],
+                                   function(x) sum(as.numeric(non_zero_col_min(cluster_distances[[x]]$intercls.single)) * count(clusters[,x])$freq))
 
 
+ggplot(ratios_df, aes(x = rel_height)) +
+  geom_line(aes(y = ratio_w_sum), color = "black") +
+  geom_line(aes(y = intracls_w_sum), color = "blue") +
+  geom_line(aes(y = intercls_w_sum), color = "red") +
+  labs(title = "Weighted Sums by Height",
+       x = "i-th height (constant 0.0025 steps)",
+       y = "Weighted sums") +
+  guides(color = guide_legend("Variable"))
+  scale_x_continuous(breaks = seq(0, 560, 25))
+ggsave(file = "intra_inter_w_sums_at_h_allelic_dist.png", path = "/home/dbarker/nadege/acc_clustering")
 
 
 
