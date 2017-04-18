@@ -736,43 +736,42 @@ for (i in c(1:14))
 
 
 
-#Sum of inter/intra ratios as a funciton of height (allelic_dist)
 
-sum_intra_inter_ratios_at_h <- function(height, cluster_distances, clusters)
+
+#Get the values to build the dataframe used to plot ratios 
+ratios_weighted_sums_at_h <- function(height, cluster_distances, clusters)
 {
-    intracls <- t(cluster_distances[[height]]$intracls.average)
-    intercls <- non_zero_col_min(cluster_distances[[height]]$intercls.single)
+  intracls <- t(cluster_distances[[height]]$intracls.average)
+  intercls <- non_zero_col_min(cluster_distances[[height]]$intercls.single)
+  
+  df <- data.frame("x" = c(1:length(intracls)),
+                                  "intracls_average" = intracls,
+                                  "intercls_single" = as.numeric(intercls),
+                                  stringsAsFactors = F)
+  
+  #Add information about cluster size
+  df <- join(df, count(clusters[,height]), by = "x")
+  colnames(df)[1] <- "cluster_number"
+  
+  #intra/inter ratio
+  df$ratio <- df$intracls_average/df$intercls_single
+  
+  df$cls_ratio <- df$freq * df$ratio
+  
+  abs_height <- colnames(allelic_clusters)[height]
+  ratio_w_sum <- sum(df$cls_ratio)
+  intracls_w_sum <- sum(df$intracls_average * df$freq)
+  intercls_w_sum <- sum(df$intercls_single * df$freq)
+  sum_ratio <- intracls_w_sum/intercls_w_sum
     
-    #make a data frame to make a scatterplot of intracls average vs. intercls single (at height 45)
-    intra_vs_inter_df <- data.frame("x" = c(1:length(intracls)),
-                                    "intracls_average" = intracls,
-                                    "intercls_single" = as.numeric(intercls),
-                                    stringsAsFactors = F)
-    
-    #Add information about cluster size
-    intra_vs_inter_df <- join(intra_vs_inter_df, count(clusters[,height]), by = "x")
-    colnames(intra_vs_inter_df)[1] <- "cluster_number"
-    
-    intra_vs_inter_df$ratio <- intra_vs_inter_df$intracls_average/intra_vs_inter_df$intercls_single
-    
-    intra_vs_inter_df$cls_ratio <- intra_vs_inter_df$freq * intra_vs_inter_df$ratio
-    
-    sum(intra_vs_inter_df$cls_ratio)
+  data.frame(abs_height, height, ratio_w_sum, intracls_w_sum, intercls_w_sum, sum_ratio)
 }
 
+ratios_lists <- lapply(c(1:557), function(x) ratios_weighted_sums_at_h(x, clusters_allelic_distances, allelic_clusters))
 
-ratios_df <- data.frame(abs_height = colnames(allelic_clusters)[2:557],
-                        rel_height = c(2:557))
-ratios_df$ratio_w_sum <- sapply(ratios_df$rel_height[1:556], 
-                               function(x) sum_intra_inter_ratios_at_h(x, clusters_allelic_distances, allelic_clusters)) 
+ratios_df <- do.call("rbind", ratios_lists)
 
-ratios_df$intracls_w_sum <- sapply(ratios_df$rel_height[1:556],
-                                   function(x) sum(clusters_allelic_distances[[x]]$intracls.average * count(allelic_clusters[,x])$freq))
-
-ratios_df$intercls_w_sum <- sapply(ratios_df$rel_height[1:556],
-                                   function(x) sum(as.numeric(non_zero_col_min(cluster_distances[[x]]$intercls.single)) * count(clusters[,x])$freq))
-
-ratios_df$sum_ratio <- ratios_df$intracls_w_sum/ratios_df$intercls_w_sum
+colnames(ratios_df) <- c("abs_height", "rel_height", "ratio_w_sum", "intracls_w_sum", "intercls_w_sum", "sum_ratio")
 
 
 m <- melt(ratios_df, id.vars = c("abs_height", "rel_height"), measure.vars = c("ratio_w_sum", "intracls_w_sum", "intercls_w_sum"))
@@ -795,5 +794,4 @@ ggplot(ratios_df, aes(x = rel_height)) +
        x = "i-th height (constant 0.0025 steps)",
        y = "Weighted sum")
 ggsave(file = "intra_inter_w_sums_ratio_at_h_allelic_dist.png", path = "/home/dbarker/nadege/acc_clustering")
-
 
