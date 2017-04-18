@@ -772,17 +772,28 @@ ratios_df$intracls_w_sum <- sapply(ratios_df$rel_height[1:556],
 ratios_df$intercls_w_sum <- sapply(ratios_df$rel_height[1:556],
                                    function(x) sum(as.numeric(non_zero_col_min(cluster_distances[[x]]$intercls.single)) * count(clusters[,x])$freq))
 
+ratios_df$sum_ratio <- ratios_df$intracls_w_sum/ratios_df$intercls_w_sum
 
-ggplot(ratios_df, aes(x = rel_height)) +
-  geom_line(aes(y = ratio_w_sum), color = "black") +
-  geom_line(aes(y = intracls_w_sum), color = "blue") +
-  geom_line(aes(y = intercls_w_sum), color = "red") +
+
+m <- melt(ratios_df, id.vars = c("abs_height", "rel_height"), measure.vars = c("ratio_w_sum", "intracls_w_sum", "intercls_w_sum"))
+
+
+#tri-line: weighted sum of ratios of intra/inter and individual weighted sums of inter and intra at height
+ggplot(m, aes(x = rel_height)) +
+  geom_line(aes(y = value, color = variable)) +
   labs(title = "Weighted Sums by Height",
        x = "i-th height (constant 0.0025 steps)",
        y = "Weighted sums") +
-  guides(color = guide_legend("Variable"))
   scale_x_continuous(breaks = seq(0, 560, 25))
-ggsave(file = "intra_inter_w_sums_at_h_allelic_dist.png", path = "/home/dbarker/nadege/acc_clustering")
+ggsave(file = "intra_inter_w_sums_at_h_allelic_dist.png", path = "/home/dbarker/nadege/acc_clustering", width = 9)
 
+#ratio of weigthed sums of intra/inter at height
+ggplot(ratios_df, aes(x = rel_height)) +
+  geom_line(aes(y = sum_ratio)) +
+  scale_x_continuous(breaks = seq(0, 560, 25)) +
+  labs(title = "Ratio of Weighted Sums by Height",
+       x = "i-th height (constant 0.0025 steps)",
+       y = "Weighted sum")
+ggsave(file = "intra_inter_w_sums_ratio_at_h_allelic_dist.png", path = "/home/dbarker/nadege/acc_clustering")
 
 
