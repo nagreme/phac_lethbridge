@@ -1,7 +1,7 @@
 #Intra & inter cluster distances for the accessory
 
 # Nadège Pulgar-Vidal
-# March 13, 2017
+# March 13, 2017 onwards
 
 library(clv)
 library(magrittr)
@@ -29,6 +29,10 @@ colnames(acc_genes) <- sub("X","", colnames(acc_genes))
 acc_genes[acc_genes == 0] <- NA
 acc_genes[acc_genes == -1] <- NA
 # dist_acc <- dist.gene(acc_genes, method = "pairwise", pairwise.deletion = T, variance = F) %>% as.matrix()
+
+#another acc_genes that includes 0s and -1s
+acc_genes_full <- read.table(file=acc_file, row.names = 1, header=T, sep=",")
+colnames(acc_genes_full) <- sub("X","", colnames(acc_genes_full))
 
 #redo bin_acc/gene presence absence with the msit data to compare distributions
 mist_pres_abs_genes_p0 <- t(acc_genes) #assuming acc_genes are already filtered by wanted genomes
@@ -794,4 +798,43 @@ ggplot(ratios_df, aes(x = rel_height)) +
        x = "i-th height (constant 0.0025 steps)",
        y = "Weighted sum")
 ggsave(file = "intra_inter_w_sums_ratio_at_h_allelic_dist.png", path = "/home/dbarker/nadege/acc_clustering")
+
+
+
+n.unique <- length %.% unique
+#Allele distribution in the accessory
+
+#histograms of distribution of number of alleles per gene
+num_allele_df <- data.frame(num_alleles = apply(acc_genes, 2, n.unique))
+
+ggplot(num_allele_df, aes(num_alleles)) +
+  geom_histogram(binwidth = 5) +
+  labs(title = "Distribution of Number of Alleles per Gene",
+       subtitle = "(Accessory Genes)",
+       x = "Alleles per gene",
+       y = "Frequency") 
+ggsave(filename = "num_alleles_in_acc_histogram.png", path = "/home/dbarker/nadege/acc_clustering")
+
+
+
+#bar/col plot of allele distribution for each gene
+
+allele_distribution_histogram <- function(genes_df, gene_col_index)
+{
+  alleles_df <- count(genes_df[,gene_col_index])
+  
+  ggplot(alleles_df, aes(x, freq)) +
+    geom_col() +
+    labs(title = colnames(genes_df)[gene_col_index],
+         subtitle = "Distribution of alleles",
+         x = "Alleles",
+         y = "Frequency")
+  ggsave(filename = paste0("allele_distribution_in_", colnames(genes_df)[gene_col_index], ".png"), path = "/home/dbarker/nadege/acc_clustering")
+}
+
+lapply(c(1:ncol(acc_genes_full)), function(x) allele_distribution_histogram(acc_genes_full, x))
+
+# lapply(c(1:3), function(x) allele_distribution_histogram(acc_genes_full, x))
+
+
 
