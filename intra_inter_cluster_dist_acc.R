@@ -742,7 +742,7 @@ for (i in c(1:14))
 
 
 
-#Get the values to build the dataframe used to plot ratios 
+#Get the values to build the dataframe used to plot ratios (and stability)
 ratios_weighted_sums_at_h <- function(height, cluster_distances, clusters)
 {
   intracls <- t(cluster_distances[[height]]$intracls.average)
@@ -760,6 +760,7 @@ ratios_weighted_sums_at_h <- function(height, cluster_distances, clusters)
   #intra/inter ratio
   df$ratio <- df$intracls_average/df$intercls_single
   
+  #weighted
   df$cls_ratio <- df$freq * df$ratio
   
   abs_height <- colnames(allelic_clusters)[height]
@@ -767,15 +768,17 @@ ratios_weighted_sums_at_h <- function(height, cluster_distances, clusters)
   intracls_w_sum <- sum(df$intracls_average * df$freq)
   intercls_w_sum <- sum(df$intercls_single * df$freq)
   sum_ratio <- intracls_w_sum/intercls_w_sum
+  stability <- intercls_w_sum - (height-1)*0.0025*5257 #0.0025 is the step size and 5257 is the number os strains/genomes
+  #the math (rearrangement) behind this is in my lab journal Apr 19, 2017
     
-  data.frame(abs_height, height, ratio_w_sum, intracls_w_sum, intercls_w_sum, sum_ratio)
+  data.frame(abs_height, height, ratio_w_sum, intracls_w_sum, intercls_w_sum, sum_ratio, stability)
 }
 
 ratios_lists <- lapply(c(1:557), function(x) ratios_weighted_sums_at_h(x, clusters_allelic_distances, allelic_clusters))
 
 ratios_df <- do.call("rbind", ratios_lists)
 
-colnames(ratios_df) <- c("abs_height", "rel_height", "ratio_w_sum", "intracls_w_sum", "intercls_w_sum", "sum_ratio")
+colnames(ratios_df) <- c("abs_height", "rel_height", "ratio_w_sum", "intracls_w_sum", "intercls_w_sum", "sum_ratio", "stability")
 
 
 m <- melt(ratios_df, id.vars = c("abs_height", "rel_height"), measure.vars = c("ratio_w_sum", "intracls_w_sum", "intercls_w_sum"))
@@ -837,4 +840,14 @@ lapply(c(1:ncol(acc_genes_full)), function(x) allele_distribution_histogram(acc_
 # lapply(c(1:3), function(x) allele_distribution_histogram(acc_genes_full, x))
 
 
+
+#Allele stability line plot (reuse ratios_df)
+ggplot(ratios_df, aes(x = rel_height))+
+  geom_line(aes(y = stability)) +
+  labs(title = "Stability", 
+       subtitle = "(weighted sum of min intercls distance single linkage) - (distance from threshold)",
+       x = "i-th height (constant 0.0025 steps)",
+       y = "Stability") +
+  scale_x_continuous(breaks = seq(0,575, 25))
+ggsave(filename = "stability_line_allelic.png", path = "/home/dbarker/nadege/acc_clustering", width = 12)
 
